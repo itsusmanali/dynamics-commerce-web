@@ -40,6 +40,8 @@ The `container` module is the general-purpose nested group. Its Content slot acc
 
 New WordPress pages start with a `page-layout` module containing fixed Header, Sub header, Main, Sub footer, and Footer slots. Existing pages are not overwritten; insert Page layout manually where needed.
 
+Nothing is injected globally: Header and Footer use semantic landmarks only when their slots contain authored modules or fragments. Insert the `breadcrumb` module in any desired slot to show URL-based breadcrumbs; omitting it keeps that page breadcrumb-free.
+
 ## Category and product templates
 
 Create and publish these WordPress pages:

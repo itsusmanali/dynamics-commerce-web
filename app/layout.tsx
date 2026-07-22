@@ -5,8 +5,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "@/styles/site.scss";
-import { SiteFooter } from "@/components/site-footer";
-import { defaultHeaderModule, ModuleRenderer } from "@/components/module-renderer";
 import { ApiQueryProvider } from "@/lib/api/query/query-client";
 import { Suspense } from "react";
 
@@ -27,7 +25,7 @@ export default async function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col"><Suspense><ApiQueryProvider><div data-global-header><ModuleRenderer modules={[defaultHeaderModule]} /></div>{children}<div className="mt-auto" data-global-footer><SiteFooter /></div></ApiQueryProvider></Suspense></body>
+      <body className="min-h-full flex flex-col"><Suspense><ApiQueryProvider>{children}</ApiQueryProvider></Suspense></body>
     </html>
   );
 }

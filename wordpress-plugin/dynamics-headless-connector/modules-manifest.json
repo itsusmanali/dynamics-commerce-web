@@ -1,6 +1,46 @@
 [
   {
     "schemaVersion": 1,
+    "friendlyName": "Breadcrumb",
+    "name": "breadcrumb",
+    "description": "Displays navigation breadcrumbs generated from the current URL.",
+    "categories": [
+      "navigation"
+    ],
+    "tags": [
+      "breadcrumb",
+      "navigation",
+      "seo"
+    ],
+    "config": {
+      "showHome": {
+        "friendlyName": "Show home",
+        "type": "boolean",
+        "default": true,
+        "group": "Content"
+      },
+      "separator": {
+        "friendlyName": "Separator",
+        "type": "string",
+        "default": "/",
+        "group": "Content"
+      },
+      "className": {
+        "friendlyName": "CSS classes",
+        "type": "string",
+        "default": "",
+        "group": "Advanced"
+      }
+    },
+    "resources": {
+      "homeLabel": {
+        "value": "Home",
+        "comment": "First breadcrumb label."
+      }
+    }
+  },
+  {
+    "schemaVersion": 1,
     "friendlyName": "Container",
     "name": "container",
     "description": "Layout group that contains other modules.",

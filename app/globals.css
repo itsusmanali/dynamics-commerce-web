@@ -19,12 +19,6 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* A page-authored header/footer fragment replaces only that page's code default. */
-body:has([data-page-slot="header"] > *) > [data-global-header],
-body:has([data-page-slot="footer"] > *) > [data-global-footer] {
-  display: none;
-}
-
 .wp-content, .site-shell { width: min(100% - 2rem, 75rem); margin-inline: auto; }
 .wp-content { padding-block: 3rem; }
 .wp-content :where(img, video, iframe) { max-width: 100%; height: auto; }

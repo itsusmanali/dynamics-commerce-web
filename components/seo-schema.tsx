@@ -2,9 +2,8 @@
  * Copyright (c) Lumovy Technology Solutions. All rights reserved.
  *--------------------------------------------------------------------------------------------*/
 
-import Link from "next/link";
 import { site } from "@/lib/site";
-import { frontendPath, frontendUrl } from "@/lib/urls";
+import { frontendUrl } from "@/lib/urls";
 import type { SeoData } from "@/lib/wordpress/types";
 
 function rewriteSchemaValue(value: unknown, wordpressCanonical: string, canonical: string): unknown {
@@ -30,16 +29,6 @@ export function SeoSchema({ seo, path }: { seo?: SeoData | null; path: string })
     html = JSON.stringify(schema).replace(/</g, "\\u003c");
   } catch { return null; }
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: html }} />;
-}
-
-export function Breadcrumbs({ seo, path }: { seo?: SeoData | null; path: string }) {
-  const items = seo?.breadcrumbs;
-  if (!items || items.length < 2) return null;
-  return <nav aria-label="Breadcrumb" className="site-shell pt-6 text-sm text-black/60"><ol className="flex flex-wrap gap-2">{items.map((item, index) => {
-    const isLast = index === items.length - 1;
-    const href = isLast ? path : frontendPath(item.url);
-    return <li className="flex gap-2" key={`${item.text}-${index}`}>{index ? <span aria-hidden="true">/</span> : null}{isLast ? <span aria-current="page">{item.text}</span> : <Link className="hover:text-black hover:underline" href={href}>{item.text}</Link>}</li>;
-  })}</ol></nav>;
 }
 
 export function SiteSchema({ name, description }: { name: string; description?: string }) {
