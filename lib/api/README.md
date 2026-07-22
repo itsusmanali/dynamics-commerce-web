@@ -12,3 +12,12 @@ Start with `modules/README.md`. This folder contains plumbing that modules reuse
 - `app/api/commerce/<name>/<Name>.ts`: feature API code containing only path, method, payload, params and result handling.
 
 Most module developers should not need to change these files. Add a feature service only when a new external API needs server-side payload construction or authentication.
+
+Create APIs independently:
+
+```bash
+npm run api:create -- products query
+npm run api:create -- add-to-cart mutation
+```
+
+Connect query APIs separately with `npm run action:create`. Mutation APIs remain independent and are consumed with `useApiMutation`.

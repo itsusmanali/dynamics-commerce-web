@@ -26,10 +26,10 @@ npm run modules:generate
 ## Create an API route
 
 ```bash
-npm run api:create -- promotions promo-banner client
+npm run api:create -- promotions query
 ```
 
-This one command creates the Commerce API, creates its Next.js route, adds it to `promo-banner.definition.json`, and selects client execution.
+This command creates only the Commerce API and its Next.js route. APIs and modules are intentionally isolated, so the command works even when no module exists.
 
 You normally edit only `app/api/commerce/promotions/Promotions.ts`. It contains five numbered values:
 
@@ -39,7 +39,13 @@ You normally edit only `app/api/commerce/promotions/Promotions.ts`. It contains 
 4. Commerce query parameters.
 5. Returned data.
 
-The Commerce base URL, API version, OUN, channel settings, Axios instance, token interceptor, refresh handling, errors and React Query integration are already connected.
+The Commerce base URL, API version, OUN, channel settings, Axios instance, token interceptor, refresh handling and errors are already connected.
+
+Connect it to a module only when that module is ready:
+
+```bash
+npm run action:create -- promo-banner promotions /api/commerce/promotions client
+```
 
 ## Add a GET data action
 
@@ -106,25 +112,53 @@ Both helpers read the same `execution` value from the definition. There is no se
 Do not add writes to `dataActions`. Payloads are dynamic, so use standard React Query mutations in the module:
 
 ```ts
-interface AddToCartInput {
-  productId: number;
-  quantity: number;
-}
-
-async function addToCart(input: AddToCartInput) {
-  return browserApi.post("/cart", input).then((response) => response.data);
-}
-
-const addToCartMutation = useMutation({
-  mutationFn: addToCart,
-  onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cart"] }),
+const dimensions = useApiMutation<Result, DimensionInput>({
+  endpoint: "/api/commerce/product-dimensions",
 });
 
-addToCartMutation.mutate({ productId: 123, quantity: 2 });
-addToCartMutation.isPending;
-addToCartMutation.isError;
-addToCartMutation.error;
+dimensions.mutate({ recordId: 123, requestedDimensions: [1, 2] });
+dimensions.data;
+dimensions.isPending;
+dimensions.isError;
+dimensions.error;
+dimensions.reset();
 ```
+
+Create an isolated mutation endpoint with:
+
+```bash
+npm run api:create -- add-to-cart mutation
+```
+
+## Infinite lists and pagination
+
+Use `useInfiniteDataAction` for load-more or infinite-scroll lists:
+
+```ts
+const products = useInfiniteDataAction<ProductsResponse>({
+  action,
+  params: {
+    categoryId,
+    search: searchTerm,
+    sorting: sortingParam,
+    refinements: JSON.stringify(refinementPayload),
+  },
+  pageSize: 10,
+  getItemCount: (page) => page.products.length,
+  getTotalCount: (page) => page.totalCount,
+});
+
+products.data?.pages.flatMap((page) => page.products);
+products.isLoading;
+products.isFetching;
+products.isFetchingNextPage;
+products.hasNextPage;
+products.fetchNextPage();
+products.isError;
+products.error;
+```
+
+The helper automatically sends `top` and `skip` to the Next.js API. The Products API converts those into Commerce `$top` and `$skip` parameters.
 
 A POST may still use `useQuery` when it is a read with a fixed payload, as Microsoft Commerce sometimes requires. Put that POST in a Next.js GET route, as the categories example does. The browser performs a simple GET; the server route sends the required Commerce POST.
 
