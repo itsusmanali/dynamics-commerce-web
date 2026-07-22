@@ -31,7 +31,7 @@ Template modules render before page modules. Native Gutenberg blocks retain thei
 
 ## Data actions
 
-Modules declare external reads in `dataActions` inside their definition. Each action names its public API endpoint and whether it may execute on the server, client, or both. The matching `<module>.data.ts` owns the typed loader; the module component decides whether to resolve it before rendering or let its client view call the declared endpoint.
+Modules declare external reads in `dataActions` inside their definition. Each action names its public API endpoint and whether it executes on the server or client. This is a developer-owned decision: it is intentionally not exposed to WordPress authors. The matching `<module>.data.ts` owns the typed loader; the module component reads `defaultExecution` to resolve it before rendering or let its client view call the declared endpoint.
 
 Prefer server execution for SEO, fast first paint, secrets, and cacheable content. Use client execution for user-specific or frequently changing data. Never expose credentials in a client-enabled action. The header is the reference implementation: its `menu` action supports both modes and `/api/demo/menu` provides nested test data.
 
@@ -39,8 +39,10 @@ Adding an action to another module follows the same path:
 
 1. Declare it under `dataActions` in the definition.
 2. Export the typed loader/action map from the module's `.data.ts`.
-3. Add an execution selector to `config` if authors should control the mode.
-4. Resolve it in the server module for `server`, or call its same-origin API route from the client view for `client`.
+3. Set `defaultExecution` in code to `server` or `client`.
+4. Resolve it in the server module for `server`, or use the shared TanStack Query data-action hook for `client`.
+
+Axios provides the HTTP layer. TanStack Query handles client caching, request deduplication, cancellation, retry, and stale data. Dynamics Commerce calls use `lib/commerce/client.ts`, which supplies OData headers, API version, OUN, timeout behavior, single-flight token refresh, one retry after a 401, and a session-expired callback without coupling modules to a particular authentication UI.
 
 ## Template extensions
 

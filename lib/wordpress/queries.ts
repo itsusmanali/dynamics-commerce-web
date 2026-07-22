@@ -3,6 +3,7 @@ import type { Page, Post, TaxonomyArchive } from "./types";
 import type { ModuleInstance } from "@/modules/module.types";
 import type { PageTemplateSettings } from "@/templates/template.types";
 import type { MenuItem } from "@/lib/demo-menu";
+import { defaultCommerceConfig, type CommerceConfig } from "@/lib/commerce/config";
 
 export interface WordPressSettings {
   title: string;
@@ -109,6 +110,13 @@ export async function getWordPressSettings() {
     ["settings"],
   );
   return data?.generalSettings ?? null;
+}
+
+export async function getCommerceConfig(): Promise<CommerceConfig> {
+  const data = await queryWordPressOptional<{ dynamicsCommerceConfig: string | null }>(`query DynamicsCommerceConfig { dynamicsCommerceConfig }`, ["settings", "commerce"]);
+  if (!data?.dynamicsCommerceConfig) return defaultCommerceConfig;
+  try { return { ...defaultCommerceConfig, ...(JSON.parse(data.dynamicsCommerceConfig) as Partial<CommerceConfig>) }; }
+  catch { return defaultCommerceConfig; }
 }
 
 interface WordPressMenuNode { id: string; databaseId: number; parentDatabaseId?: number | null; label?: string | null; path?: string | null; uri?: string | null; description?: string | null; }

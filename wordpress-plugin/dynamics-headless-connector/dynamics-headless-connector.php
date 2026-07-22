@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dynamics Headless Connector
  * Description: Connects WordPress to the Dynamics Commerce Next.js frontend with previews, cache revalidation, and connection checks.
- * Version: 2.1.0
+ * Version: 2.2.0
  * Requires at least: 6.5
  * Requires PHP: 8.0
  * Author: Lumovy
@@ -86,6 +86,11 @@ final class Dynamics_Headless_Connector
             'redirects' => '',
             'header_fragment' => 0,
             'footer_fragment' => 0,
+            'commerce_api_base_url' => 'https://scunu608glj43499030-rs.su.retail.dynamics.com',
+            'commerce_image_base_url' => 'https://images-us-prod.cms.commerce.dynamics.com/cms/api/fgnsbnhhtw/imageFileData/search?fileName=/',
+            'commerce_api_version' => '7.3',
+            'commerce_channel_id' => '5637144607',
+            'commerce_oun' => '067',
         ]);
     }
 
@@ -125,7 +130,18 @@ final class Dynamics_Headless_Connector
             'redirects' => self::sanitize_redirects($input['redirects'] ?? ''),
             'header_fragment' => absint($input['header_fragment'] ?? 0),
             'footer_fragment' => absint($input['footer_fragment'] ?? 0),
+            'commerce_api_base_url' => self::sanitize_https_url($input['commerce_api_base_url'] ?? '', $current['commerce_api_base_url']),
+            'commerce_image_base_url' => self::sanitize_https_url($input['commerce_image_base_url'] ?? '', $current['commerce_image_base_url']),
+            'commerce_api_version' => preg_match('/^\d+(?:\.\d+)?$/', (string) ($input['commerce_api_version'] ?? '')) ? sanitize_text_field($input['commerce_api_version']) : $current['commerce_api_version'],
+            'commerce_channel_id' => preg_match('/^\d+$/', (string) ($input['commerce_channel_id'] ?? '')) ? sanitize_text_field($input['commerce_channel_id']) : $current['commerce_channel_id'],
+            'commerce_oun' => sanitize_text_field($input['commerce_oun'] ?? $current['commerce_oun']),
         ];
+    }
+
+    private static function sanitize_https_url(string $value, string $fallback): string
+    {
+        $url = esc_url_raw(trim($value), ['https']);
+        return $url && wp_http_validate_url($url) && str_starts_with($url, 'https://') ? $url : $fallback;
     }
 
     private static function sanitize_redirects(string $value): string
@@ -181,6 +197,12 @@ final class Dynamics_Headless_Connector
                     <tr><th><label for="dh_redirects">Permanent redirects</label></th><td><textarea class="large-text code" id="dh_redirects" rows="7" name="<?php echo esc_attr(self::OPTION); ?>[redirects]" placeholder="/old-page => /new-page"><?php echo esc_textarea($settings['redirects']); ?></textarea><p class="description">One internal 308 redirect per line, for example <code>/old-page =&gt; /new-page</code>.</p></td></tr>
                     <tr><th><label for="dh_header_fragment">Global header fragment</label></th><td><select id="dh_header_fragment" name="<?php echo esc_attr(self::OPTION); ?>[header_fragment]"><option value="0">Use code default</option><?php foreach ($fragments as $fragment) : ?><option value="<?php echo esc_attr($fragment->ID); ?>" <?php selected($settings['header_fragment'], $fragment->ID); ?>><?php echo esc_html($fragment->post_title); ?></option><?php endforeach; ?></select></td></tr>
                     <tr><th><label for="dh_footer_fragment">Global footer fragment</label></th><td><select id="dh_footer_fragment" name="<?php echo esc_attr(self::OPTION); ?>[footer_fragment]"><option value="0">Use code default</option><?php foreach ($fragments as $fragment) : ?><option value="<?php echo esc_attr($fragment->ID); ?>" <?php selected($settings['footer_fragment'], $fragment->ID); ?>><?php echo esc_html($fragment->post_title); ?></option><?php endforeach; ?></select></td></tr>
+                    <tr><th colspan="2"><h2><?php esc_html_e('Dynamics 365 Commerce', 'dynamics-headless'); ?></h2><p class="description"><?php esc_html_e('Advanced connection defaults. Leave these unchanged unless your Commerce environment differs.', 'dynamics-headless'); ?></p></th></tr>
+                    <tr><th><label for="dh_commerce_api">Commerce API URL</label></th><td><input class="large-text code" id="dh_commerce_api" type="url" name="<?php echo esc_attr(self::OPTION); ?>[commerce_api_base_url]" value="<?php echo esc_attr($settings['commerce_api_base_url']); ?>" required></td></tr>
+                    <tr><th><label for="dh_commerce_images">Commerce image URL</label></th><td><input class="large-text code" id="dh_commerce_images" type="url" name="<?php echo esc_attr(self::OPTION); ?>[commerce_image_base_url]" value="<?php echo esc_attr($settings['commerce_image_base_url']); ?>" required></td></tr>
+                    <tr><th><label for="dh_commerce_version">API version</label></th><td><input class="small-text code" id="dh_commerce_version" type="text" inputmode="decimal" name="<?php echo esc_attr(self::OPTION); ?>[commerce_api_version]" value="<?php echo esc_attr($settings['commerce_api_version']); ?>" required></td></tr>
+                    <tr><th><label for="dh_commerce_channel">Channel ID</label></th><td><input class="regular-text code" id="dh_commerce_channel" type="text" inputmode="numeric" name="<?php echo esc_attr(self::OPTION); ?>[commerce_channel_id]" value="<?php echo esc_attr($settings['commerce_channel_id']); ?>" required></td></tr>
+                    <tr><th><label for="dh_commerce_oun">Operating unit number</label></th><td><input class="small-text code" id="dh_commerce_oun" type="text" name="<?php echo esc_attr(self::OPTION); ?>[commerce_oun]" value="<?php echo esc_attr($settings['commerce_oun']); ?>" required></td></tr>
                 </tbody></table>
                 <?php submit_button(__('Save connection', 'dynamics-headless')); ?>
             </form>
@@ -398,6 +420,20 @@ final class Dynamics_Headless_Connector
                 return wp_json_encode([
                     'header' => self::composition_for_post((int) $settings['header_fragment'], false),
                     'footer' => self::composition_for_post((int) $settings['footer_fragment'], false),
+                ]);
+            },
+        ]);
+        register_graphql_field('RootQuery', 'dynamicsCommerceConfig', [
+            'type' => 'String',
+            'description' => __('Public Dynamics Commerce connection settings. Authentication tokens are never included.', 'dynamics-headless'),
+            'resolve' => static function (): string {
+                $settings = self::settings();
+                return wp_json_encode([
+                    'apiBaseUrl' => $settings['commerce_api_base_url'],
+                    'baseImageUrl' => $settings['commerce_image_base_url'],
+                    'apiVersion' => (float) $settings['commerce_api_version'],
+                    'channelId' => (int) $settings['commerce_channel_id'],
+                    'oun' => $settings['commerce_oun'],
                 ]);
             },
         ]);

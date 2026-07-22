@@ -58,17 +58,6 @@
         { "label": "WordPress-authored menu only", "value": "authored" }
       ]
     },
-    "menuDataExecution": {
-      "friendlyName": "Load menu data on",
-      "description": "Server is fastest and SEO-friendly. Client loads after the page becomes interactive.",
-      "type": "select",
-      "default": "server",
-      "group": "Menu data",
-      "options": [
-        { "label": "Server (recommended)", "value": "server" },
-        { "label": "Client", "value": "client" }
-      ]
-    },
     "wordpressMenuSlug": {
       "friendlyName": "WordPress menu slug",
       "description": "Slug of the menu authored under Appearance → Menus. Used by Authored and All modes.",

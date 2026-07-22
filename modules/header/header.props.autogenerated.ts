@@ -7,7 +7,6 @@ export interface HeaderConfig extends Record<string, string | number | boolean |
   foregroundColor: string;
   showSearch: boolean;
   menuMode: string;
-  menuDataExecution: string;
   wordpressMenuSlug: string;
 }
 export interface HeaderResources extends Record<string, string | number | boolean | null | string[]> {
