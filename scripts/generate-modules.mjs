@@ -13,6 +13,9 @@ for (const entry of entries.filter((item) => item.isDirectory()).sort((a, b) => 
   const definition = JSON.parse(await readFile(path.join(modulesRoot, entry.name, `${entry.name}.definition.json`), "utf8"));
   if (definition.schemaVersion !== 1 || definition.name !== entry.name || !/^[a-z][a-z0-9-]*$/.test(definition.name) || !definition.friendlyName || !definition.description) throw new Error(`Invalid module definition: ${entry.name}`);
   for (const [key, field] of Object.entries(definition.config || {})) if (!field.friendlyName || !allowedTypes.has(field.type)) throw new Error(`Invalid config field ${definition.name}.${key}`);
+  for (const [key, action] of Object.entries(definition.dataActions || {})) {
+    if (!action.friendlyName || action.method !== "GET" || !action.endpoint?.startsWith("/api/") || !["server", "client"].includes(action.defaultExecution) || !Array.isArray(action.allowedExecutions) || !action.allowedExecutions.includes(action.defaultExecution)) throw new Error(`Invalid data action ${definition.name}.${key}`);
+  }
   const name = pascal(definition.name);
   const config = Object.entries(definition.config).map(([key, field]) => `  ${key}: ${tsType(field)};`).join("\n");
   const resources = Object.keys(definition.resources).map((key) => `  ${key}: string;`).join("\n");

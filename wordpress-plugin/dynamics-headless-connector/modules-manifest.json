@@ -62,6 +62,51 @@
         "type": "boolean",
         "default": true,
         "group": "Features"
+      },
+      "menuMode": {
+        "friendlyName": "Menu items",
+        "description": "Choose which API menu items the header displays.",
+        "type": "select",
+        "default": "all",
+        "group": "Menu data",
+        "options": [
+          {
+            "label": "Show all menu items",
+            "value": "all"
+          },
+          {
+            "label": "Retail menu only",
+            "value": "retail"
+          },
+          {
+            "label": "WordPress-authored menu only",
+            "value": "authored"
+          }
+        ]
+      },
+      "menuDataExecution": {
+        "friendlyName": "Load menu data on",
+        "description": "Server is fastest and SEO-friendly. Client loads after the page becomes interactive.",
+        "type": "select",
+        "default": "server",
+        "group": "Menu data",
+        "options": [
+          {
+            "label": "Server (recommended)",
+            "value": "server"
+          },
+          {
+            "label": "Client",
+            "value": "client"
+          }
+        ]
+      },
+      "wordpressMenuSlug": {
+        "friendlyName": "WordPress menu slug",
+        "description": "Slug of the menu authored under Appearance → Menus. Used by Authored and All modes.",
+        "type": "string",
+        "default": "primary",
+        "group": "Menu data"
       }
     },
     "resources": {
@@ -79,6 +124,34 @@
         "value": "Primary navigation",
         "comment": "Accessible navigation label.",
         "group": "Accessibility"
+      },
+      "openMenuLabel": {
+        "value": "Open menu",
+        "comment": "Accessible label for the mobile menu button.",
+        "group": "Accessibility"
+      },
+      "closeMenuLabel": {
+        "value": "Close menu",
+        "comment": "Accessible label for the mobile menu button.",
+        "group": "Accessibility"
+      },
+      "loadingMenuLabel": {
+        "value": "Loading navigation…",
+        "comment": "Displayed while client-side menu data loads.",
+        "group": "Navigation"
+      }
+    },
+    "dataActions": {
+      "menu": {
+        "friendlyName": "Header menu",
+        "description": "Loads the nested navigation and mega-menu presentation data.",
+        "endpoint": "/api/demo/menu",
+        "method": "GET",
+        "defaultExecution": "server",
+        "allowedExecutions": [
+          "server",
+          "client"
+        ]
       }
     }
   }

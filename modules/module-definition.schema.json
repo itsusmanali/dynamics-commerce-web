@@ -29,6 +29,21 @@
     "resources": {
       "type": "object",
       "additionalProperties": { "type": "object", "required": ["value"], "properties": { "value": {}, "comment": { "type": "string" }, "group": { "type": "string" } } }
+    },
+    "dataActions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["friendlyName", "endpoint", "method", "defaultExecution", "allowedExecutions"],
+        "properties": {
+          "friendlyName": { "type": "string", "minLength": 1 },
+          "description": { "type": "string" },
+          "endpoint": { "type": "string", "pattern": "^/api/" },
+          "method": { "const": "GET" },
+          "defaultExecution": { "enum": ["server", "client"] },
+          "allowedExecutions": { "type": "array", "items": { "enum": ["server", "client"] }, "minItems": 1, "uniqueItems": true }
+        }
+      }
     }
   }
 }

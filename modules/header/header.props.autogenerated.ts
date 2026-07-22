@@ -6,10 +6,16 @@ export interface HeaderConfig extends Record<string, string | number | boolean |
   backgroundColor: string;
   foregroundColor: string;
   showSearch: boolean;
+  menuMode: string;
+  menuDataExecution: string;
+  wordpressMenuSlug: string;
 }
 export interface HeaderResources extends Record<string, string | number | boolean | null | string[]> {
   blogLabel: string;
   searchLabel: string;
   menuLabel: string;
+  openMenuLabel: string;
+  closeMenuLabel: string;
+  loadingMenuLabel: string;
 }
 export type HeaderProps = ModuleRuntimeProps<HeaderConfig, HeaderResources>;

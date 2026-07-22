@@ -2,6 +2,7 @@ import { queryWordPress, queryWordPressOptional, queryWordPressPreview } from ".
 import type { Page, Post, TaxonomyArchive } from "./types";
 import type { ModuleInstance } from "@/modules/module.types";
 import type { PageTemplateSettings } from "@/templates/template.types";
+import type { MenuItem } from "@/lib/demo-menu";
 
 export interface WordPressSettings {
   title: string;
@@ -108,6 +109,33 @@ export async function getWordPressSettings() {
     ["settings"],
   );
   return data?.generalSettings ?? null;
+}
+
+interface WordPressMenuNode { id: string; databaseId: number; parentDatabaseId?: number | null; label?: string | null; path?: string | null; uri?: string | null; description?: string | null; }
+
+export async function getWordPressMenu(slug: string): Promise<MenuItem[]> {
+  try {
+    const data = await queryWordPress<{ menu: { menuItems: { nodes: WordPressMenuNode[] } } | null }>(
+      `query DynamicsMenu($id: ID!) { menu(id: $id, idType: SLUG) { menuItems(first: 100) { nodes { id databaseId parentDatabaseId label path uri description } } } }`,
+      { id: slug },
+      ["menus", `menu:${slug}`],
+    );
+    const nodes = data?.menu?.menuItems.nodes ?? [];
+    const byParent = new Map<number, WordPressMenuNode[]>();
+    for (const node of nodes) {
+      const parent = node.parentDatabaseId ?? 0;
+      byParent.set(parent, [...(byParent.get(parent) ?? []), node]);
+    }
+    const build = (parent: number, depth: number): MenuItem[] => depth > 4 ? [] : (byParent.get(parent) ?? []).map((node) => ({
+      id: node.id || String(node.databaseId),
+      label: node.label || "Menu item",
+      href: node.path || node.uri || "#",
+      audience: "authored",
+      description: node.description || undefined,
+      children: build(node.databaseId, depth + 1),
+    }));
+    return build(0, 1);
+  } catch { return []; }
 }
 
 export async function getPostsByTaxonomy(type: "category" | "tag", slug: string) {

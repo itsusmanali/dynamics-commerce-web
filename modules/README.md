@@ -29,6 +29,19 @@ Resources are stored per locale (`en`, `fr`, `fr-ca`, etc.). Next.js resolves an
 
 Template modules render before page modules. Native Gutenberg blocks retain their position between Dynamics modules.
 
+## Data actions
+
+Modules declare external reads in `dataActions` inside their definition. Each action names its public API endpoint and whether it may execute on the server, client, or both. The matching `<module>.data.ts` owns the typed loader; the module component decides whether to resolve it before rendering or let its client view call the declared endpoint.
+
+Prefer server execution for SEO, fast first paint, secrets, and cacheable content. Use client execution for user-specific or frequently changing data. Never expose credentials in a client-enabled action. The header is the reference implementation: its `menu` action supports both modes and `/api/demo/menu` provides nested test data.
+
+Adding an action to another module follows the same path:
+
+1. Declare it under `dataActions` in the definition.
+2. Export the typed loader/action map from the module's `.data.ts`.
+3. Add an execution selector to `config` if authors should control the mode.
+4. Resolve it in the server module for `server`, or call its same-origin API route from the client view for `client`.
+
 ## Template extensions
 
 Templates support a wrapper class, structured custom meta tags and allowlisted script IDs. Add reviewed scripts to `templates/script-registry.ts`. WordPress cannot store or execute arbitrary frontend JavaScript.
