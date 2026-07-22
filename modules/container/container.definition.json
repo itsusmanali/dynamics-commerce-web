@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1, "friendlyName": "Container", "name": "container", "description": "Layout group that contains other modules.", "categories": ["layout"], "tags": ["container", "group", "layout"],
+  "config": {
+    "layout": { "friendlyName": "Layout", "type": "select", "default": "stack", "group": "Layout", "options": [{ "label": "Stacked", "value": "stack" }, { "label": "Flow", "value": "flow" }] },
+    "width": { "friendlyName": "Width", "type": "select", "default": "boxed", "group": "Layout", "options": [{ "label": "Boxed", "value": "boxed" }, { "label": "Full width", "value": "full" }] },
+    "backgroundColor": { "friendlyName": "Background color", "type": "color", "default": "#ffffff", "group": "Background" },
+    "backgroundImage": { "friendlyName": "Background image", "type": "image", "default": "", "group": "Background" },
+    "backgroundFit": { "friendlyName": "Image fit", "type": "select", "default": "cover", "group": "Background", "options": [{ "label": "Cover", "value": "cover" }, { "label": "Contain", "value": "contain" }, { "label": "Auto", "value": "auto" }] },
+    "className": { "friendlyName": "CSS classes", "type": "string", "default": "", "group": "Advanced" }
+  },
+  "resources": {},
+  "slots": { "content": { "friendlyName": "Content", "description": "Add any modules to this container.", "allowedModules": ["*"] } }
+}

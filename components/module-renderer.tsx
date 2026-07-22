@@ -21,8 +21,12 @@ export function ModuleRenderer({ modules, locale = process.env.DEFAULT_LOCALE ??
     const language = locale.toLowerCase();
     const baseLanguage = language.split("-")[0];
     const localized = instance.resources[language] ?? instance.resources[baseLanguage] ?? instance.resources.en ?? {};
-    return <Component key={instance.id} id={instance.id} locale={locale} config={{ ...defaultsForConfig(instance.name), ...instance.config }} resources={{ ...defaultsForResources(instance.name), ...localized }} />;
+    // Older authored headers predate slots. Keep them working until an author resaves the block.
+    const authoredSlots = instance.name === "header" && !instance.slots?.navigation ? { ...instance.slots, navigation: [defaultNavigationModule] } : instance.slots;
+    const slots = Object.fromEntries(Object.entries(authoredSlots ?? {}).map(([name, children]) => [name, <ModuleRenderer key={`${instance.id}-${name}`} modules={children} locale={locale} />]));
+    return <Component key={instance.id} id={instance.id} locale={locale} config={{ ...defaultsForConfig(instance.name), ...instance.config }} resources={{ ...defaultsForResources(instance.name), ...localized }} slots={slots} />;
   })}</>;
 }
 
-export const defaultHeaderModule: ModuleInstance = { id: "default-global-header", name: "header", config: {}, resources: {} };
+const defaultNavigationModule: ModuleInstance = { id: "default-navigation", name: "navigation", config: {}, resources: {}, slots: {} };
+export const defaultHeaderModule: ModuleInstance = { id: "default-global-header", name: "header", config: {}, resources: {}, slots: { navigation: [defaultNavigationModule] } };

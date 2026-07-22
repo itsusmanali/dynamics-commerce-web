@@ -4,7 +4,7 @@
 
 import { NextResponse } from "next/server";
 import { getWordPressMenu } from "@/lib/wordpress/queries";
-import type { HeaderData, MenuItem } from "@/modules/header/header.data";
+import type { NavigationData as HeaderData, NavigationItem as MenuItem } from "@/modules/navigation/navigation.data";
 
 // Returns WordPress navigation plus the Commerce entry populated by the categories action.
 export async function GET(request: Request) {

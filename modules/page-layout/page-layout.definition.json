@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1, "friendlyName": "Page layout", "name": "page-layout", "description": "Standard five-slot page structure.", "categories": ["layout"], "tags": ["page", "layout", "slots"],
+  "config": { "className": { "friendlyName": "Page CSS classes", "type": "string", "default": "", "group": "Advanced" } }, "resources": {},
+  "slots": {
+    "header": { "friendlyName": "Header", "allowedModules": ["*"] },
+    "sub-header": { "friendlyName": "Sub header", "allowedModules": ["*"] },
+    "main": { "friendlyName": "Main", "allowedModules": ["container", "*"] },
+    "sub-footer": { "friendlyName": "Sub footer", "allowedModules": ["*"] },
+    "footer": { "friendlyName": "Footer", "allowedModules": ["*"] }
+  }
+}

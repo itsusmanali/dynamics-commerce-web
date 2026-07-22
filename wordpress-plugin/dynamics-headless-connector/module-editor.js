@@ -6,7 +6,7 @@
   const el = wp.element.createElement;
   const { useEffect } = wp.element;
   const { registerBlockType } = wp.blocks;
-  const { InspectorControls, MediaUpload, MediaUploadCheck, useBlockProps } = wp.blockEditor;
+  const { InspectorControls, InnerBlocks, MediaUpload, MediaUploadCheck, useBlockProps } = wp.blockEditor;
   const { Button, PanelBody, TextControl, TextareaControl, ToggleControl, SelectControl, ColorPalette } = wp.components;
 
   const defaults = (definition) => Object.fromEntries(Object.entries(definition.config || {}).map(([key, field]) => [key, field.default ?? null]));
@@ -22,7 +22,18 @@
     return el(TextControl, { ...props, type: field.type === "url" ? "url" : "text" });
   };
 
-  (settings.definitions || []).forEach((definition) => {
+  const definitions = settings.definitions || [];
+  const definitionNames = definitions.map((definition) => definition.name);
+
+  const SlotEdit = ({ attributes }) => {
+    const wildcard = (attributes.allowedModules || []).includes("*");
+    const names = wildcard ? definitionNames : (attributes.allowedModules || []);
+    const allowedBlocks = names.map((name) => `dynamics/${name}`);
+    return el("section", useBlockProps({ className: "dynamics-module-slot", style: { border: "1px dashed #8c8f94", padding: "12px", margin: "8px 0" } }), el("strong", {}, attributes.friendlyName || attributes.slotName || "Slot"), attributes.description ? el("p", { className: "description" }, attributes.description) : null, el(InnerBlocks, { allowedBlocks, renderAppender: InnerBlocks.ButtonBlockAppender }));
+  };
+  registerBlockType("dynamics/slot", { apiVersion: 3, title: "Dynamics Slot", icon: "insert", category: "design", parent: definitionNames.map((name) => `dynamics/${name}`), attributes: { slotName: { type: "string" }, friendlyName: { type: "string" }, description: { type: "string" }, allowedModules: { type: "array", default: ["*"] } }, edit: SlotEdit, save: () => el(InnerBlocks.Content) });
+
+  definitions.forEach((definition) => {
     const ModuleEdit = ({ attributes, setAttributes, clientId }) => {
       const config = { ...defaults(definition), ...(attributes.config || {}) };
       const locale = attributes.locale || settings.defaultLocale || "en";
@@ -37,12 +48,14 @@
           .map(([key, field]) => control(key, field, config[key], (value) => setAttributes({ config: { ...config, [key]: value } })))
       ));
       inspector.push(el(PanelBody, { title: "Localized resources", initialOpen: true, key: "resources" }, el(TextControl, { label: "Locale", value: locale, onChange: (value) => setAttributes({ locale: value.toLowerCase() }) }), Object.entries(definition.resources || {}).map(([key, resource]) => el(TextControl, { key, label: key, help: resource.comment || "", value: localized[key] || "", onChange: (value) => setAttributes({ resources: { ...(attributes.resources || {}), [locale]: { ...localized, [key]: value } } }) }))));
-      return el(wp.element.Fragment, {}, el(InspectorControls, {}, inspector), el("div", useBlockProps({ className: "dynamics-module-placeholder" }), el("strong", {}, definition.friendlyName), el("p", {}, definition.description), el("small", {}, `Module: ${definition.name} · Locale: ${locale}`)));
+      const slots = Object.entries(definition.slots || {});
+      const template = slots.map(([slotName, slot]) => ["dynamics/slot", { slotName, friendlyName: slot.friendlyName, description: slot.description || "", allowedModules: slot.allowedModules || ["*"] }]);
+      return el(wp.element.Fragment, {}, el(InspectorControls, {}, inspector), el("div", useBlockProps({ className: "dynamics-module-placeholder" }), el("strong", {}, definition.friendlyName), el("p", {}, definition.description), el("small", {}, `Module: ${definition.name} · Locale: ${locale}`), slots.length ? el(InnerBlocks, { allowedBlocks: ["dynamics/slot"], template, templateLock: "all" }) : null));
     };
     registerBlockType(`dynamics/${definition.name}`, {
       apiVersion: 3, title: definition.friendlyName, description: definition.description, icon: "screenoptions", category: "design",
       attributes: { moduleId: { type: "string" }, config: { type: "object", default: {} }, resources: { type: "object", default: {} }, locale: { type: "string", default: settings.defaultLocale || "en" } },
-      edit: ModuleEdit, save: () => null,
+      edit: ModuleEdit, save: () => el(InnerBlocks.Content),
     });
   });
 

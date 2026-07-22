@@ -1,6 +1,102 @@
 [
   {
     "schemaVersion": 1,
+    "friendlyName": "Container",
+    "name": "container",
+    "description": "Layout group that contains other modules.",
+    "categories": [
+      "layout"
+    ],
+    "tags": [
+      "container",
+      "group",
+      "layout"
+    ],
+    "config": {
+      "layout": {
+        "friendlyName": "Layout",
+        "type": "select",
+        "default": "stack",
+        "group": "Layout",
+        "options": [
+          {
+            "label": "Stacked",
+            "value": "stack"
+          },
+          {
+            "label": "Flow",
+            "value": "flow"
+          }
+        ]
+      },
+      "width": {
+        "friendlyName": "Width",
+        "type": "select",
+        "default": "boxed",
+        "group": "Layout",
+        "options": [
+          {
+            "label": "Boxed",
+            "value": "boxed"
+          },
+          {
+            "label": "Full width",
+            "value": "full"
+          }
+        ]
+      },
+      "backgroundColor": {
+        "friendlyName": "Background color",
+        "type": "color",
+        "default": "#ffffff",
+        "group": "Background"
+      },
+      "backgroundImage": {
+        "friendlyName": "Background image",
+        "type": "image",
+        "default": "",
+        "group": "Background"
+      },
+      "backgroundFit": {
+        "friendlyName": "Image fit",
+        "type": "select",
+        "default": "cover",
+        "group": "Background",
+        "options": [
+          {
+            "label": "Cover",
+            "value": "cover"
+          },
+          {
+            "label": "Contain",
+            "value": "contain"
+          },
+          {
+            "label": "Auto",
+            "value": "auto"
+          }
+        ]
+      },
+      "className": {
+        "friendlyName": "CSS classes",
+        "type": "string",
+        "default": "",
+        "group": "Advanced"
+      }
+    },
+    "resources": {},
+    "slots": {
+      "content": {
+        "friendlyName": "Content",
+        "description": "Add any modules to this container.",
+        "allowedModules": [
+          "*"
+        ]
+      }
+    }
+  },
+  {
+    "schemaVersion": 1,
     "friendlyName": "Global header",
     "name": "header",
     "description": "Site-wide navigation header with configurable layout and localized labels.",
@@ -56,72 +152,99 @@
         "default": "#171717",
         "group": "Design"
       },
-      "showSearch": {
-        "friendlyName": "Show search",
-        "description": "Display the search navigation item.",
-        "type": "boolean",
-        "default": true,
-        "group": "Features"
-      },
+      "className": {
+        "friendlyName": "CSS classes",
+        "description": "Optional Tailwind or site utility classes.",
+        "type": "string",
+        "default": "",
+        "group": "Advanced"
+      }
+    },
+    "resources": {
+      "siteName": {
+        "value": "Dynamics Commerce",
+        "comment": "Header logo text.",
+        "group": "Brand"
+      }
+    },
+    "slots": {
+      "navigation": {
+        "friendlyName": "Navigation",
+        "description": "Primary header navigation.",
+        "allowedModules": [
+          "navigation"
+        ]
+      }
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "friendlyName": "Navigation",
+    "name": "navigation",
+    "description": "Responsive WordPress and Commerce navigation.",
+    "categories": [
+      "global",
+      "navigation"
+    ],
+    "tags": [
+      "menu",
+      "navigation",
+      "commerce"
+    ],
+    "config": {
       "menuMode": {
         "friendlyName": "Menu items",
-        "description": "Choose which API menu items the header displays.",
         "type": "select",
         "default": "all",
-        "group": "Menu data",
+        "group": "Data",
         "options": [
           {
-            "label": "Show all menu items",
+            "label": "All",
             "value": "all"
           },
           {
-            "label": "Retail menu only",
+            "label": "Retail only",
             "value": "retail"
           },
           {
-            "label": "WordPress-authored menu only",
+            "label": "WordPress only",
             "value": "authored"
           }
         ]
       },
       "wordpressMenuSlug": {
         "friendlyName": "WordPress menu slug",
-        "description": "Slug of the menu authored under Appearance → Menus. Used by Authored and All modes.",
         "type": "string",
         "default": "primary",
-        "group": "Menu data"
+        "group": "Data"
+      },
+      "showSearch": {
+        "friendlyName": "Show search",
+        "type": "boolean",
+        "default": true,
+        "group": "Features"
       }
     },
     "resources": {
-      "blogLabel": {
-        "value": "Blog",
-        "comment": "Navigation label for the blog.",
-        "group": "Navigation"
+      "menuLabel": {
+        "value": "Primary navigation",
+        "comment": "Accessible navigation label."
+      },
+      "openLabel": {
+        "value": "Open menu",
+        "comment": "Mobile open button label."
+      },
+      "closeLabel": {
+        "value": "Close menu",
+        "comment": "Mobile close button label."
       },
       "searchLabel": {
         "value": "Search",
-        "comment": "Navigation label for search.",
-        "group": "Navigation"
+        "comment": "Search link label."
       },
-      "menuLabel": {
-        "value": "Primary navigation",
-        "comment": "Accessible navigation label.",
-        "group": "Accessibility"
-      },
-      "openMenuLabel": {
-        "value": "Open menu",
-        "comment": "Accessible label for the mobile menu button.",
-        "group": "Accessibility"
-      },
-      "closeMenuLabel": {
-        "value": "Close menu",
-        "comment": "Accessible label for the mobile menu button.",
-        "group": "Accessibility"
-      },
-      "loadingMenuLabel": {
+      "loadingLabel": {
         "value": "Loading navigation…",
-        "comment": "Displayed while client-side menu data loads.",
-        "group": "Navigation"
+        "comment": "Loading text."
       }
     },
     "dataActions": {
@@ -134,6 +257,62 @@
         "endpoint": "/api/commerce/categories",
         "method": "GET",
         "execution": "client"
+      }
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "friendlyName": "Page layout",
+    "name": "page-layout",
+    "description": "Standard five-slot page structure.",
+    "categories": [
+      "layout"
+    ],
+    "tags": [
+      "page",
+      "layout",
+      "slots"
+    ],
+    "config": {
+      "className": {
+        "friendlyName": "Page CSS classes",
+        "type": "string",
+        "default": "",
+        "group": "Advanced"
+      }
+    },
+    "resources": {},
+    "slots": {
+      "header": {
+        "friendlyName": "Header",
+        "allowedModules": [
+          "*"
+        ]
+      },
+      "sub-header": {
+        "friendlyName": "Sub header",
+        "allowedModules": [
+          "*"
+        ]
+      },
+      "main": {
+        "friendlyName": "Main",
+        "allowedModules": [
+          "container",
+          "*"
+        ]
+      },
+      "sub-footer": {
+        "friendlyName": "Sub footer",
+        "allowedModules": [
+          "*"
+        ]
+      },
+      "footer": {
+        "friendlyName": "Footer",
+        "allowedModules": [
+          "*"
+        ]
       }
     }
   }

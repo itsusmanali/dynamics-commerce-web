@@ -6,7 +6,7 @@
 /**
  * Plugin Name: Dynamics Headless Connector
  * Description: Connects WordPress to the Dynamics Commerce Next.js frontend with previews, cache revalidation, and connection checks.
- * Version: 2.2.0
+ * Version: 2.3.0
  * Requires at least: 6.5
  * Requires PHP: 8.0
  * Author: Lumovy
@@ -53,6 +53,7 @@ final class Dynamics_Headless_Connector
         add_action('delete_term', [self::class, 'taxonomy_changed']);
         add_filter('preview_post_link', [self::class, 'preview_link'], 10, 2);
         add_filter('the_content', [self::class, 'rewrite_content_links'], 20);
+        add_filter('default_content', [self::class, 'default_page_layout'], 10, 2);
         add_action('graphql_register_types', [self::class, 'register_graphql_fields']);
     }
 
@@ -486,13 +487,29 @@ final class Dynamics_Headless_Connector
             'attributes' => ['fragmentId' => ['type' => 'number', 'default' => 0]],
             'render_callback' => static fn(): string => '',
         ]);
+        register_block_type('dynamics/slot', [
+            'api_version' => 3,
+            'attributes' => [
+                'slotName' => ['type' => 'string'],
+                'friendlyName' => ['type' => 'string'],
+                'description' => ['type' => 'string'],
+                'allowedModules' => ['type' => 'array', 'default' => ['*']],
+            ],
+            'render_callback' => static fn(array $attributes, string $content): string => $content,
+        ]);
+    }
+
+    public static function default_page_layout(string $content, WP_Post $post): string
+    {
+        if ($post->post_type !== 'page' || trim($content) !== '') return $content;
+        return '<!-- wp:dynamics/page-layout /-->';
     }
 
     public static function enqueue_module_editor(): void
     {
         $sync = wp_parse_args(get_option(self::SYNC_OPTION, []), ['lastAttempt' => 0]);
         if ((int) $sync['lastAttempt'] < time() - 300) self::sync_modules();
-        wp_enqueue_script('dynamics-module-editor', plugins_url('module-editor.js', __FILE__), ['wp-blocks', 'wp-element', 'wp-components', 'wp-block-editor', 'wp-i18n'], '2.0.0', true);
+        wp_enqueue_script('dynamics-module-editor', plugins_url('module-editor.js', __FILE__), ['wp-blocks', 'wp-element', 'wp-components', 'wp-block-editor', 'wp-i18n'], '2.3.0', true);
         $fragments = array_map(static fn(WP_Post $post): array => ['label' => $post->post_title, 'value' => $post->ID], get_posts(['post_type' => 'dynamics_fragment', 'post_status' => 'publish', 'numberposts' => -1]));
         wp_localize_script('dynamics-module-editor', 'DynamicsModuleEditor', ['definitions' => self::module_definitions(), 'fragments' => $fragments, 'defaultLocale' => substr(get_locale(), 0, 2)]);
     }
@@ -565,7 +582,13 @@ final class Dynamics_Headless_Connector
             $template_id = (int) get_post_meta($post_id, '_dynamics_template_id', true);
             if ($template_id) $modules = array_merge($modules, self::composition_for_post($template_id, false, $seen));
         }
-        foreach (parse_blocks($post->post_content) as $index => $block) {
+        return array_merge($modules, self::composition_for_blocks(parse_blocks($post->post_content), $post_id, $seen));
+    }
+
+    private static function composition_for_blocks(array $blocks, int $post_id, array $seen): array
+    {
+        $modules = [];
+        foreach ($blocks as $index => $block) {
             if (($block['blockName'] ?? '') === 'dynamics/fragment') {
                 $modules = array_merge($modules, self::composition_for_post((int) ($block['attrs']['fragmentId'] ?? 0), false, $seen));
                 continue;
@@ -577,11 +600,18 @@ final class Dynamics_Headless_Connector
             }
             $name = substr((string) $block['blockName'], strlen('dynamics/'));
             $attrs = $block['attrs'] ?? [];
+            $slots = [];
+            foreach (($block['innerBlocks'] ?? []) as $slot_block) {
+                if (($slot_block['blockName'] ?? '') !== 'dynamics/slot') continue;
+                $slot_name = sanitize_key($slot_block['attrs']['slotName'] ?? 'content');
+                $slots[$slot_name] = self::composition_for_blocks($slot_block['innerBlocks'] ?? [], $post_id, $seen);
+            }
             $modules[] = [
                 'id' => sanitize_key($attrs['moduleId'] ?? ($post_id . '-' . $index . '-' . $name)),
                 'name' => sanitize_key($name),
                 'config' => is_array($attrs['config'] ?? null) ? $attrs['config'] : new stdClass(),
                 'resources' => is_array($attrs['resources'] ?? null) ? $attrs['resources'] : new stdClass(),
+                'slots' => $slots ?: new stdClass(),
             ];
         }
         return $modules;

@@ -2,7 +2,7 @@
  * Copyright (c) Lumovy Technology Solutions. All rights reserved.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 
 export type ModulePrimitive = string | number | boolean | null;
 export type ModuleValues = Record<string, ModulePrimitive | string[]>;
@@ -11,6 +11,7 @@ export interface ModuleInstance {
   name: string;
   config: ModuleValues;
   resources: Record<string, ModuleValues>;
+  slots?: Record<string, ModuleInstance[]>;
   html?: string;
 }
 export interface ModuleRuntimeProps<
@@ -21,6 +22,7 @@ export interface ModuleRuntimeProps<
   config: TConfig;
   resources: TResources;
   locale: string;
+  slots: Record<string, ReactNode>;
 }
 export type ModuleComponent = ComponentType<
   ModuleRuntimeProps<ModuleValues, ModuleValues>
@@ -48,6 +50,12 @@ export interface ModuleDataActionDefinition {
   method: "GET";
   execution: ModuleDataExecution;
 }
+export interface ModuleSlotDefinition {
+  friendlyName: string;
+  description?: string;
+  allowedModules: string[];
+  required?: boolean;
+}
 export interface ModuleDefinition {
   schemaVersion: 1;
   friendlyName: string;
@@ -60,5 +68,6 @@ export interface ModuleDefinition {
     string,
     { value: ModulePrimitive; comment?: string; group?: string }
   >;
+  slots?: Record<string, ModuleSlotDefinition>;
   dataActions?: Record<string, ModuleDataActionDefinition>;
 }

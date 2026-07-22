@@ -1,37 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dynamics Commerce Web
 
-## Getting Started
+Next.js storefront driven by WordPress, WPGraphQL, Yoast SEO, and Dynamics 365 Commerce.
 
-First, run the development server:
+## Everyday module work
+
+Create a module, edit its definition and component, then validate it:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run module:create
+npm run modules:generate
+npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Module authors normally edit only `modules/<name>/`. Generated prop files and the registry must not be edited by hand. Prefer Tailwind utility classes; add module SCSS only when Tailwind cannot express the requirement cleanly.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Slots and nested modules
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+A slot means that a module can contain other modules. Declare slots in the parent module's `*.definition.json`:
 
-## Learn More
+```json
+{
+  "slots": {
+    "navigation": {
+      "friendlyName": "Navigation",
+      "description": "Add the navigation module here.",
+      "allowedModules": ["navigation"],
+      "required": false
+    }
+  }
+}
+```
 
-To learn more about Next.js, take a look at the following resources:
+- Use `["navigation"]` to show only that module in the WordPress inserter.
+- Use `["*"]` to allow every generated module.
+- Render a slot with `slots.navigation`; kebab-case names use `slots["sub-header"]`.
+- Every child remains a normal module with its own config and localized resources.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The `container` module is the general-purpose nested group. Its Content slot accepts any module, while its own settings control stacked/flow layout, boxed/full width, background, image fit, and CSS classes.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+New WordPress pages start with a `page-layout` module containing fixed Header, Sub header, Main, Sub footer, and Footer slots. Existing pages are not overwritten; insert Page layout manually where needed.
 
-## Deploy on Vercel
+## Category and product templates
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Create and publish these WordPress pages:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# dynamics-commerce-web
+- `category` — reusable category/PLP composition
+- `product` — reusable product/PDP composition
+
+They are authoring templates. Storefront resolution uses clean URLs:
+
+- `/category-name`
+- `/category-name/product-name`
+
+A real WordPress page at a requested path always wins. Otherwise the catch-all route resolves Commerce data and renders the appropriate WordPress template. The rendered wrapper exposes `data-catalog-kind`, `data-category-id`, and `data-product-id` for modules that need route context.
+
+## WordPress synchronization
+
+After deploying Next.js, the connector automatically downloads the generated module manifest every five minutes and when an editor opens with stale definitions. Settings > Headless Frontend also has a manual Sync Modules button.
+
+When PHP/plugin code changes, rebuild and upload the connector ZIP, then activate/update it in WordPress. Manifest-only module definition changes do not require another ZIP.
+
+## Validation
+
+```bash
+npm run copyright
+npm run lint
+npm run build
+```

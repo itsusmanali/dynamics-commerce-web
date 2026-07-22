@@ -39,75 +39,12 @@
       "default": "#171717",
       "group": "Design"
     },
-    "showSearch": {
-      "friendlyName": "Show search",
-      "description": "Display the search navigation item.",
-      "type": "boolean",
-      "default": true,
-      "group": "Features"
-    },
-    "menuMode": {
-      "friendlyName": "Menu items",
-      "description": "Choose which API menu items the header displays.",
-      "type": "select",
-      "default": "all",
-      "group": "Menu data",
-      "options": [
-        { "label": "Show all menu items", "value": "all" },
-        { "label": "Retail menu only", "value": "retail" },
-        { "label": "WordPress-authored menu only", "value": "authored" }
-      ]
-    },
-    "wordpressMenuSlug": {
-      "friendlyName": "WordPress menu slug",
-      "description": "Slug of the menu authored under Appearance → Menus. Used by Authored and All modes.",
-      "type": "string",
-      "default": "primary",
-      "group": "Menu data"
-    }
+    "className": { "friendlyName": "CSS classes", "description": "Optional Tailwind or site utility classes.", "type": "string", "default": "", "group": "Advanced" }
   },
   "resources": {
-    "blogLabel": {
-      "value": "Blog",
-      "comment": "Navigation label for the blog.",
-      "group": "Navigation"
-    },
-    "searchLabel": {
-      "value": "Search",
-      "comment": "Navigation label for search.",
-      "group": "Navigation"
-    },
-    "menuLabel": {
-      "value": "Primary navigation",
-      "comment": "Accessible navigation label.",
-      "group": "Accessibility"
-    },
-    "openMenuLabel": {
-      "value": "Open menu",
-      "comment": "Accessible label for the mobile menu button.",
-      "group": "Accessibility"
-    },
-    "closeMenuLabel": {
-      "value": "Close menu",
-      "comment": "Accessible label for the mobile menu button.",
-      "group": "Accessibility"
-    },
-    "loadingMenuLabel": {
-      "value": "Loading navigation…",
-      "comment": "Displayed while client-side menu data loads.",
-      "group": "Navigation"
-    }
+    "siteName": { "value": "Dynamics Commerce", "comment": "Header logo text.", "group": "Brand" }
   },
-  "dataActions": {
-    "menu": {
-      "endpoint": "/api/navigation",
-      "method": "GET",
-      "execution": "client"
-    },
-    "categories": {
-      "endpoint": "/api/commerce/categories",
-      "method": "GET",
-      "execution": "client"
-    }
+  "slots": {
+    "navigation": { "friendlyName": "Navigation", "description": "Primary header navigation.", "allowedModules": ["navigation"] }
   }
 }
