@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 import { cacheLife, cacheTag } from "next/cache";
 import { site } from "@/lib/site";
 import type { GraphQLResponse } from "@/lib/wordpress/types";

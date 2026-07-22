@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 import { getAllPosts } from "@/lib/wordpress/queries";
 import { site } from "@/lib/site";
 const xml = (value: string) => value.replace(/[<>&'"]/g, (char) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" })[char]!);

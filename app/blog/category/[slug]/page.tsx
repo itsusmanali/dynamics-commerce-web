@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 import { PostList } from "@/components/post-list";
 import { getPostsByTaxonomy, getTaxonomies, getTaxonomyBySlug } from "@/lib/wordpress/queries";
 import { metadataFor } from "@/lib/seo";

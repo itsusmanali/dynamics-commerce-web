@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 import { PostList } from "@/components/post-list";
 import { getAllPosts } from "@/lib/wordpress/queries";
 import { site } from "@/lib/site";

@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 import { site } from "@/lib/site";
 
 export function frontendPath(value?: string | null) {

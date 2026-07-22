@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 import Link from "next/link";
 import { metadataFor } from "@/lib/seo";
 import { getAllPosts, getContentModules, getPostBySlug, getRedirectForPath } from "@/lib/wordpress/queries";

@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 import type { Metadata } from "next";
 import { site } from "@/lib/site";
 import type { ContentNode } from "@/lib/wordpress/types";

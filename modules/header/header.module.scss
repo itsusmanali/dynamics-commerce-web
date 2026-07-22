@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 .root { border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent); position: relative; width: 100%; z-index: 40; }
 .sticky { position: sticky; top: 0; backdrop-filter: blur(12px); }
 .shell { display: flex; min-height: 4.5rem; align-items: center; justify-content: space-between; gap: 2rem; }

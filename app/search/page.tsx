@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 import Link from "next/link";
 import { Suspense } from "react";
 import { searchWordPress } from "@/lib/wordpress/queries";

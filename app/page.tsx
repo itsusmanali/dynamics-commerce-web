@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 import { metadataFor } from "@/lib/seo";
 import { PostList } from "@/components/post-list";
 import { getAllPosts, getContentModules, getPageByUri, getPageTemplateSettings, getWordPressSettings } from "@/lib/wordpress/queries";

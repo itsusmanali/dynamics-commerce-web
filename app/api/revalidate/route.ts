@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 import { revalidatePath, revalidateTag } from "next/cache";
 import { WORDPRESS_CACHE_TAG } from "@/lib/wordpress/client";
 

@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 import Link from "next/link";
 import { site } from "@/lib/site";
 import { frontendPath, frontendUrl } from "@/lib/urls";

@@ -100,22 +100,14 @@
   },
   "dataActions": {
     "menu": {
-      "friendlyName": "Header menu",
-      "description": "Loads the nested navigation and mega-menu presentation data.",
-      "operation": "query",
-      "endpoint": "/api/demo/menu",
+      "endpoint": "/api/navigation",
       "method": "GET",
-      "defaultExecution": "server",
-      "allowedExecutions": ["server", "client"]
+      "execution": "client"
     },
     "categories": {
-      "friendlyName": "Commerce categories",
-      "description": "Loads the Dynamics Commerce category hierarchy.",
-      "operation": "query",
       "endpoint": "/api/commerce/categories",
       "method": "GET",
-      "defaultExecution": "client",
-      "allowedExecutions": ["client", "server"]
+      "execution": "client"
     }
   }
 }

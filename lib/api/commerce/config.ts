@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 export const API_BASE_URL = "https://scunu608glj43499030-rs.su.retail.dynamics.com";
 export const BASE_IMAGE_URL = "https://images-us-prod.cms.commerce.dynamics.com/cms/api/fgnsbnhhtw/imageFileData/search?fileName=/";
 export const API_VERSION = 7.3;

@@ -1,16 +1,25 @@
-import { demoMenu, filterMenu, type MenuItem } from "@/lib/demo-menu";
-import { getWordPressMenu } from "@/lib/wordpress/queries";
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
 
-export interface HeaderData { items: MenuItem[]; source: string; }
+import type { Category } from "@/types/commerceTypes.g";
 
-export const headerDataActions = {
-  menu: async (mode: "all" | "retail" | "authored", menuSlug = "primary"): Promise<HeaderData> => {
-    const authored = await getWordPressMenu(menuSlug);
-    const authoredItems = authored.length ? authored : filterMenu(demoMenu, "authored");
-    if (mode === "retail") return { items: filterMenu(demoMenu, "retail"), source: "dummy-api" };
-    if (mode === "authored") return { items: authoredItems, source: authored.length ? "wordpress-graphql" : "dummy-api-fallback" };
-    return { items: [...filterMenu(demoMenu, "retail"), ...authoredItems], source: authored.length ? "wordpress-graphql+dummy-api" : "dummy-api" };
-  },
-};
+// This file contains types only. API execution is handled by the shared data-action helpers.
+export interface MenuItem {
+  id: string;
+  label: string;
+  href: string;
+  audience: "retail" | "authored";
+  description?: string;
+  image?: string;
+  featured?: boolean;
+  children?: MenuItem[];
+}
 
-export async function getHeaderData(mode: "all" | "retail" | "authored", menuSlug?: string) { return headerDataActions.menu(mode, menuSlug); }
+export interface HeaderData {
+  items: MenuItem[];
+  source: string;
+}
+export interface CategoryNode extends Category {
+  children: CategoryNode[];
+}

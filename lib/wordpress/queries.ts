@@ -1,8 +1,12 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 import { queryWordPress, queryWordPressOptional, queryWordPressPreview } from "./client";
 import type { Page, Post, TaxonomyArchive } from "./types";
 import type { ModuleInstance } from "@/modules/module.types";
 import type { PageTemplateSettings } from "@/templates/template.types";
-import type { MenuItem } from "@/lib/demo-menu";
+import type { MenuItem } from "@/modules/header/header.data";
 import { defaultCommerceConfig, type CommerceConfig } from "@/lib/api/commerce/config";
 
 export interface WordPressSettings {

@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 import type { MetadataRoute } from "next";
 import { site } from "@/lib/site";
 import { getAllPages, getAllPosts, getTaxonomies } from "@/lib/wordpress/queries";

@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 import Script from "next/script";
 import { templateScriptRegistry } from "@/templates/script-registry";
 import type { PageTemplateSettings } from "@/templates/template.types";

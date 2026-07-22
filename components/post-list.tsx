@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 import Image from "next/image";
 import Link from "next/link";
 import type { Post } from "@/lib/wordpress/types";

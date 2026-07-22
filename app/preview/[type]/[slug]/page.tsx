@@ -1,9 +1,16 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 import { draftMode } from "next/headers";
 import { getPreviewById } from "@/lib/wordpress/queries";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 export const metadata = { robots: { index: false, follow: false } };
 type Props = { params: Promise<{ type: string; slug: string }> };
 export default async function Preview({ params }: Props) {
+  // Draft previews must never be prerendered; they depend on the visitor's draft cookie.
+  await connection();
   if (!(await draftMode()).isEnabled) notFound();
   const { slug: id } = await params;
   const node = await getPreviewById(id);

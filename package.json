@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "api:create": "node scripts/create-api.mjs",
+    "action:create": "node scripts/add-data-action.mjs",
+    "module:create": "node scripts/create-module.mjs",
+    "copyright": "node scripts/add-license-headers.mjs",
     "modules:generate": "node scripts/generate-modules.mjs",
     "predev": "npm run modules:generate",
     "prebuild": "npm run modules:generate",

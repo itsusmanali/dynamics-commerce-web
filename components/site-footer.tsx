@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 import Link from "next/link";
 import { getAllPages, getWordPressSettings } from "@/lib/wordpress/queries";
 import { frontendPath } from "@/lib/urls";

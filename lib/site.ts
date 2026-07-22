@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
 
 export const site = {

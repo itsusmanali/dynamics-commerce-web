@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Lumovy Technology Solutions. All rights reserved.
+ *--------------------------------------------------------------------------------------------*/
+
 (function (wp, settings) {
   const el = wp.element.createElement;
   const { useEffect } = wp.element;
