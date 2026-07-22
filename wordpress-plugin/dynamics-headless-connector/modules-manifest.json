@@ -28,6 +28,10 @@
           {
             "label": "Centered",
             "value": "centered"
+          },
+          {
+            "label": "Centered",
+            "value": "left test"
           }
         ]
       },
