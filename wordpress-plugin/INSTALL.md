@@ -10,3 +10,5 @@
 8. Return to WordPress and click **Test connection**.
 
 Editors can now use WordPress normally. Publish/update operations refresh Next.js automatically, and the WordPress Preview button opens a secure Next.js draft preview.
+
+Connector 2.0 also adds **Module Fragments** and **Page Templates** to the WordPress menu. The Gutenberg inserter shows every module generated from the repository `modules` directory.

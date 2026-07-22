@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { SiteHeader } from "@/components/site-header";
+import "@/styles/site.scss";
 import { SiteFooter } from "@/components/site-footer";
+import { defaultHeaderModule, ModuleRenderer } from "@/components/module-renderer";
+import { getGlobalModules } from "@/lib/wordpress/queries";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
@@ -13,14 +15,15 @@ export const metadata: Metadata = {
   alternates: { types: { "application/rss+xml": "/feed.xml" } },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [header, footer] = await Promise.all([getGlobalModules("header"), getGlobalModules("footer")]);
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col"><SiteHeader />{children}<SiteFooter /></body>
+      <body className="min-h-full flex flex-col"><ModuleRenderer modules={header.length ? header : [defaultHeaderModule]} />{children}{footer.length ? <ModuleRenderer modules={footer} /> : <SiteFooter />}</body>
     </html>
   );
 }

@@ -1,5 +1,7 @@
 import { queryWordPress, queryWordPressOptional, queryWordPressPreview } from "./client";
 import type { Page, Post, TaxonomyArchive } from "./types";
+import type { ModuleInstance } from "@/modules/module.types";
+import type { PageTemplateSettings } from "@/templates/template.types";
 
 export interface WordPressSettings {
   title: string;
@@ -180,4 +182,40 @@ export async function getRedirects() {
 
 export async function getRedirectForPath(path: string) {
   return (await getRedirects()).find((rule) => rule.from === path)?.to ?? null;
+}
+
+function parseModules(value?: string | null) {
+  if (!value) return [] as ModuleInstance[];
+  try { return JSON.parse(value) as ModuleInstance[]; }
+  catch { return [] as ModuleInstance[]; }
+}
+
+export async function getGlobalModules(slot: "header" | "footer") {
+  const data = await queryWordPressOptional<{ dynamicsGlobals: string | null }>(
+    `query DynamicsGlobals { dynamicsGlobals }`, ["modules", "globals"],
+  );
+  if (!data?.dynamicsGlobals) return [] as ModuleInstance[];
+  try {
+    const globals = JSON.parse(data.dynamicsGlobals) as Record<string, ModuleInstance[]>;
+    return globals[slot] ?? [];
+  } catch { return [] as ModuleInstance[]; }
+}
+
+export async function getContentModules(type: "page" | "post", databaseId: number) {
+  const field = type === "page" ? "page" : "post";
+  const data = await queryWordPressOptional<Record<string, { dynamicsModules?: string | null } | null>>(
+    `query ContentModules { ${field}(id: "${databaseId}", idType: DATABASE_ID) { dynamicsModules } }`,
+    ["modules", `${type}:${databaseId}`],
+  );
+  return parseModules(data?.[field]?.dynamicsModules);
+}
+
+export async function getPageTemplateSettings(databaseId: number) {
+  const data = await queryWordPressOptional<{ page: { dynamicsTemplateSettings?: string | null } | null }>(
+    `query PageTemplateSettings { page(id: "${databaseId}", idType: DATABASE_ID) { dynamicsTemplateSettings } }`,
+    ["modules", `page:${databaseId}`],
+  );
+  if (!data?.page?.dynamicsTemplateSettings) return null;
+  try { return JSON.parse(data.page.dynamicsTemplateSettings) as PageTemplateSettings; }
+  catch { return null; }
 }

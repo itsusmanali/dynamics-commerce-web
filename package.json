@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "modules:generate": "node scripts/generate-modules.mjs",
+    "predev": "npm run modules:generate",
+    "prebuild": "npm run modules:generate",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -21,6 +24,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.11",
+    "sass": "^1.101.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

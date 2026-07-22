@@ -1,0 +1,4 @@
+// Site-wide theme overrides belong here. Keep module-specific rules in *.module.scss.
+.site-shell {
+  max-width: var(--site-content-width);
+}

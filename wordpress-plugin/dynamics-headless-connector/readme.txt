@@ -3,7 +3,7 @@ Contributors: lumovy
 Tags: headless, nextjs, graphql, vercel
 Requires at least: 6.5
 Requires PHP: 8.0
-Stable tag: 1.2.0
+Stable tag: 2.0.0
 License: GPLv2 or later
 
 Connect WordPress to the Dynamics Commerce Next.js frontend.
@@ -18,3 +18,6 @@ Connect WordPress to the Dynamics Commerce Next.js frontend.
 
 Publishing or updating a page/post automatically refreshes the frontend. WordPress Preview buttons open the secure Next.js preview.
 Permanent redirects can be managed from the same settings screen with one `/old => /new` rule per line.
+
+== Module authoring ==
+Connector 2.0 registers generated Dynamics modules in Gutenberg. Authors can mix them with native blocks, create reusable Module Fragments, create Page Templates, attach templates to pages, and select global header/footer fragments. Module resources are stored by locale. Template scripts must be allowlisted in the Next.js repository.

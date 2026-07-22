@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dynamics Headless Connector
  * Description: Connects WordPress to the Dynamics Commerce Next.js frontend with previews, cache revalidation, and connection checks.
- * Version: 1.2.0
+ * Version: 2.0.0
  * Requires at least: 6.5
  * Requires PHP: 8.0
  * Author: Lumovy
@@ -24,6 +24,15 @@ final class Dynamics_Headless_Connector
         register_activation_hook(__FILE__, [self::class, 'activate']);
         add_action('admin_menu', [self::class, 'admin_menu']);
         add_action('admin_init', [self::class, 'register_settings']);
+        add_action('init', [self::class, 'register_composition_types']);
+        add_action('enqueue_block_editor_assets', [self::class, 'enqueue_module_editor']);
+        add_action('add_meta_boxes_page', [self::class, 'add_template_meta_box']);
+        add_action('save_post_page', [self::class, 'save_page_template']);
+        add_action('add_meta_boxes_dynamics_template', [self::class, 'add_template_settings_meta_box']);
+        add_action('save_post_dynamics_template', [self::class, 'save_template_settings']);
+        add_action('save_post_dynamics_fragment', [self::class, 'composition_changed']);
+        add_action('save_post_dynamics_template', [self::class, 'composition_changed']);
+        add_action('update_option_' . self::OPTION, [self::class, 'composition_settings_changed'], 10, 3);
         add_action('admin_post_dynamics_headless_test', [self::class, 'test_connection']);
         add_action('transition_post_status', [self::class, 'content_changed'], 10, 3);
         add_action('post_updated', [self::class, 'published_content_updated'], 10, 3);
@@ -50,6 +59,8 @@ final class Dynamics_Headless_Connector
             'revalidation_secret' => '',
             'preview_secret' => '',
             'redirects' => '',
+            'header_fragment' => 0,
+            'footer_fragment' => 0,
         ]);
     }
 
@@ -87,6 +98,8 @@ final class Dynamics_Headless_Connector
             'revalidation_secret' => sanitize_text_field($input['revalidation_secret'] ?? $current['revalidation_secret']),
             'preview_secret' => sanitize_text_field($input['preview_secret'] ?? $current['preview_secret']),
             'redirects' => self::sanitize_redirects($input['redirects'] ?? ''),
+            'header_fragment' => absint($input['header_fragment'] ?? 0),
+            'footer_fragment' => absint($input['footer_fragment'] ?? 0),
         ];
     }
 
@@ -115,6 +128,7 @@ final class Dynamics_Headless_Connector
         $graphql_ok = class_exists('WPGraphQL') || function_exists('graphql');
         $yoast_ok = defined('WPSEO_VERSION');
         $notice = sanitize_key($_GET['dynamics_status'] ?? '');
+        $fragments = get_posts(['post_type' => 'dynamics_fragment', 'post_status' => 'publish', 'numberposts' => -1, 'orderby' => 'title', 'order' => 'ASC']);
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('Dynamics Headless Frontend', 'dynamics-headless'); ?></h1>
@@ -135,6 +149,8 @@ final class Dynamics_Headless_Connector
                     <tr><th><label for="dh_revalidate">Revalidation secret</label></th><td><input class="large-text code" id="dh_revalidate" type="text" name="<?php echo esc_attr(self::OPTION); ?>[revalidation_secret]" value="<?php echo esc_attr($settings['revalidation_secret']); ?>" autocomplete="off"><p class="description">Copy this to Vercel as <code>WORDPRESS_REVALIDATION_SECRET</code>.</p></td></tr>
                     <tr><th><label for="dh_preview">Preview secret</label></th><td><input class="large-text code" id="dh_preview" type="text" name="<?php echo esc_attr(self::OPTION); ?>[preview_secret]" value="<?php echo esc_attr($settings['preview_secret']); ?>" autocomplete="off"><p class="description">Copy this to Vercel as <code>WORDPRESS_PREVIEW_SECRET</code>.</p></td></tr>
                     <tr><th><label for="dh_redirects">Permanent redirects</label></th><td><textarea class="large-text code" id="dh_redirects" rows="7" name="<?php echo esc_attr(self::OPTION); ?>[redirects]" placeholder="/old-page => /new-page"><?php echo esc_textarea($settings['redirects']); ?></textarea><p class="description">One internal 308 redirect per line, for example <code>/old-page =&gt; /new-page</code>.</p></td></tr>
+                    <tr><th><label for="dh_header_fragment">Global header fragment</label></th><td><select id="dh_header_fragment" name="<?php echo esc_attr(self::OPTION); ?>[header_fragment]"><option value="0">Use code default</option><?php foreach ($fragments as $fragment) : ?><option value="<?php echo esc_attr($fragment->ID); ?>" <?php selected($settings['header_fragment'], $fragment->ID); ?>><?php echo esc_html($fragment->post_title); ?></option><?php endforeach; ?></select></td></tr>
+                    <tr><th><label for="dh_footer_fragment">Global footer fragment</label></th><td><select id="dh_footer_fragment" name="<?php echo esc_attr(self::OPTION); ?>[footer_fragment]"><option value="0">Use code default</option><?php foreach ($fragments as $fragment) : ?><option value="<?php echo esc_attr($fragment->ID); ?>" <?php selected($settings['footer_fragment'], $fragment->ID); ?>><?php echo esc_html($fragment->post_title); ?></option><?php endforeach; ?></select></td></tr>
                 </tbody></table>
                 <?php submit_button(__('Save connection', 'dynamics-headless')); ?>
             </form>
@@ -179,6 +195,16 @@ final class Dynamics_Headless_Connector
     }
 
     public static function taxonomy_changed(): void
+    {
+        self::notify_frontend(null);
+    }
+
+    public static function composition_changed(int $post_id): void
+    {
+        if (!wp_is_post_revision($post_id)) self::notify_frontend(null);
+    }
+
+    public static function composition_settings_changed(): void
     {
         self::notify_frontend(null);
     }
@@ -278,6 +304,170 @@ final class Dynamics_Headless_Connector
                 return wp_json_encode($rules);
             },
         ]);
+        foreach (['Page', 'Post'] as $type) {
+            register_graphql_field($type, 'dynamicsModules', [
+                'type' => 'String',
+                'description' => __('Resolved Dynamics module composition.', 'dynamics-headless'),
+                'resolve' => static fn($source): string => wp_json_encode(self::composition_for_post((int) ($source->databaseId ?? $source->ID ?? 0))),
+            ]);
+        }
+        register_graphql_field('Page', 'dynamicsTemplateSettings', [
+            'type' => 'String',
+            'resolve' => static function ($source): string {
+                $page_id = (int) ($source->databaseId ?? $source->ID ?? 0);
+                return wp_json_encode(self::template_settings((int) get_post_meta($page_id, '_dynamics_template_id', true)));
+            },
+        ]);
+        register_graphql_field('RootQuery', 'dynamicsGlobals', [
+            'type' => 'String',
+            'resolve' => static function (): string {
+                $settings = self::settings();
+                return wp_json_encode([
+                    'header' => self::composition_for_post((int) $settings['header_fragment'], false),
+                    'footer' => self::composition_for_post((int) $settings['footer_fragment'], false),
+                ]);
+            },
+        ]);
+    }
+
+    private static function module_definitions(): array
+    {
+        $path = plugin_dir_path(__FILE__) . 'modules-manifest.json';
+        if (!is_readable($path)) {
+            return [];
+        }
+        $definitions = json_decode((string) file_get_contents($path), true);
+        return is_array($definitions) ? $definitions : [];
+    }
+
+    public static function register_composition_types(): void
+    {
+        register_post_type('dynamics_fragment', [
+            'labels' => ['name' => __('Module Fragments', 'dynamics-headless'), 'singular_name' => __('Module Fragment', 'dynamics-headless')],
+            'public' => false, 'show_ui' => true, 'show_in_menu' => true, 'show_in_rest' => true,
+            'supports' => ['title', 'editor', 'revisions'], 'menu_icon' => 'dashicons-screenoptions',
+        ]);
+        register_post_type('dynamics_template', [
+            'labels' => ['name' => __('Page Templates', 'dynamics-headless'), 'singular_name' => __('Page Template', 'dynamics-headless')],
+            'public' => false, 'show_ui' => true, 'show_in_menu' => true, 'show_in_rest' => true,
+            'supports' => ['title', 'editor', 'revisions'], 'menu_icon' => 'dashicons-layout',
+        ]);
+        foreach (self::module_definitions() as $definition) {
+            $name = sanitize_key($definition['name'] ?? '');
+            if (!$name) continue;
+            register_block_type('dynamics/' . $name, [
+                'api_version' => 3,
+                'attributes' => [
+                    'moduleId' => ['type' => 'string'],
+                    'config' => ['type' => 'object', 'default' => new stdClass()],
+                    'resources' => ['type' => 'object', 'default' => new stdClass()],
+                    'locale' => ['type' => 'string', 'default' => 'en'],
+                ],
+                'render_callback' => static fn(array $attributes): string => '<div data-dynamics-module="' . esc_attr($name) . '"></div>',
+            ]);
+        }
+        register_block_type('dynamics/fragment', [
+            'api_version' => 3,
+            'attributes' => ['fragmentId' => ['type' => 'number', 'default' => 0]],
+            'render_callback' => static fn(): string => '',
+        ]);
+    }
+
+    public static function enqueue_module_editor(): void
+    {
+        wp_enqueue_script('dynamics-module-editor', plugins_url('module-editor.js', __FILE__), ['wp-blocks', 'wp-element', 'wp-components', 'wp-block-editor', 'wp-i18n'], '2.0.0', true);
+        $fragments = array_map(static fn(WP_Post $post): array => ['label' => $post->post_title, 'value' => $post->ID], get_posts(['post_type' => 'dynamics_fragment', 'post_status' => 'publish', 'numberposts' => -1]));
+        wp_localize_script('dynamics-module-editor', 'DynamicsModuleEditor', ['definitions' => self::module_definitions(), 'fragments' => $fragments, 'defaultLocale' => substr(get_locale(), 0, 2)]);
+    }
+
+    public static function add_template_meta_box(): void
+    {
+        add_meta_box('dynamics-page-template', __('Dynamics Page Template', 'dynamics-headless'), [self::class, 'render_template_meta_box'], 'page', 'side');
+    }
+
+    public static function render_template_meta_box(WP_Post $post): void
+    {
+        wp_nonce_field('dynamics_page_template', 'dynamics_page_template_nonce');
+        $selected = (int) get_post_meta($post->ID, '_dynamics_template_id', true);
+        $templates = get_posts(['post_type' => 'dynamics_template', 'post_status' => 'publish', 'numberposts' => -1]);
+        echo '<select name="dynamics_template_id" style="width:100%"><option value="0">' . esc_html__('No shared template', 'dynamics-headless') . '</option>';
+        foreach ($templates as $template) echo '<option value="' . esc_attr($template->ID) . '" ' . selected($selected, $template->ID, false) . '>' . esc_html($template->post_title) . '</option>';
+        echo '</select><p>' . esc_html__('Template modules render before page modules.', 'dynamics-headless') . '</p>';
+    }
+
+    public static function save_page_template(int $post_id): void
+    {
+        if (!isset($_POST['dynamics_page_template_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['dynamics_page_template_nonce'])), 'dynamics_page_template') || !current_user_can('edit_post', $post_id)) return;
+        update_post_meta($post_id, '_dynamics_template_id', absint($_POST['dynamics_template_id'] ?? 0));
+    }
+
+    public static function add_template_settings_meta_box(): void
+    {
+        add_meta_box('dynamics-template-settings', __('Frontend Template Settings', 'dynamics-headless'), [self::class, 'render_template_settings_meta_box'], 'dynamics_template', 'normal', 'high');
+    }
+
+    public static function render_template_settings_meta_box(WP_Post $post): void
+    {
+        wp_nonce_field('dynamics_template_settings', 'dynamics_template_settings_nonce');
+        $settings = self::template_settings($post->ID);
+        echo '<p><label><strong>' . esc_html__('Content wrapper class', 'dynamics-headless') . '</strong></label><br><input class="widefat code" name="dynamics_body_class" value="' . esc_attr($settings['bodyClass']) . '" placeholder="theme-enterprise landing-page"></p>';
+        echo '<p><label><strong>' . esc_html__('Custom meta tags (JSON)', 'dynamics-headless') . '</strong></label><br><textarea class="widefat code" rows="6" name="dynamics_custom_meta">' . esc_textarea(wp_json_encode($settings['customMeta'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) . '</textarea></p>';
+        echo '<p><label><strong>' . esc_html__('Allowlisted script IDs', 'dynamics-headless') . '</strong></label><br><input class="widefat code" name="dynamics_script_ids" value="' . esc_attr(implode(', ', $settings['scripts'])) . '" placeholder="support-widget, product-analytics"></p>';
+        echo '<p class="description">' . esc_html__('Scripts render only when the same ID exists in the Next.js script registry. Raw JavaScript is never stored in WordPress.', 'dynamics-headless') . '</p>';
+    }
+
+    public static function save_template_settings(int $post_id): void
+    {
+        if (!isset($_POST['dynamics_template_settings_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['dynamics_template_settings_nonce'])), 'dynamics_template_settings') || !current_user_can('edit_post', $post_id)) return;
+        $body_class = preg_replace('/[^a-zA-Z0-9_\- ]/', '', sanitize_text_field(wp_unslash($_POST['dynamics_body_class'] ?? '')));
+        $meta = json_decode((string) wp_unslash($_POST['dynamics_custom_meta'] ?? '{}'), true);
+        $clean_meta = [];
+        if (is_array($meta)) foreach ($meta as $key => $value) if (is_scalar($value)) $clean_meta[sanitize_key($key)] = sanitize_text_field((string) $value);
+        $scripts = array_values(array_filter(array_map('sanitize_key', explode(',', sanitize_text_field(wp_unslash($_POST['dynamics_script_ids'] ?? ''))))));
+        update_post_meta($post_id, '_dynamics_body_class', $body_class);
+        update_post_meta($post_id, '_dynamics_custom_meta', $clean_meta);
+        update_post_meta($post_id, '_dynamics_script_ids', $scripts);
+    }
+
+    private static function template_settings(int $template_id): array
+    {
+        if (!$template_id) return ['bodyClass' => '', 'customMeta' => new stdClass(), 'scripts' => []];
+        $meta = get_post_meta($template_id, '_dynamics_custom_meta', true);
+        $scripts = get_post_meta($template_id, '_dynamics_script_ids', true);
+        return ['bodyClass' => (string) get_post_meta($template_id, '_dynamics_body_class', true), 'customMeta' => is_array($meta) ? $meta : new stdClass(), 'scripts' => is_array($scripts) ? $scripts : []];
+    }
+
+    private static function composition_for_post(int $post_id, bool $include_template = true, array $seen = []): array
+    {
+        if (!$post_id || in_array($post_id, $seen, true)) return [];
+        $post = get_post($post_id);
+        if (!$post) return [];
+        $seen[] = $post_id;
+        $modules = [];
+        if ($include_template && $post->post_type === 'page') {
+            $template_id = (int) get_post_meta($post_id, '_dynamics_template_id', true);
+            if ($template_id) $modules = array_merge($modules, self::composition_for_post($template_id, false, $seen));
+        }
+        foreach (parse_blocks($post->post_content) as $index => $block) {
+            if (($block['blockName'] ?? '') === 'dynamics/fragment') {
+                $modules = array_merge($modules, self::composition_for_post((int) ($block['attrs']['fragmentId'] ?? 0), false, $seen));
+                continue;
+            }
+            if (!str_starts_with((string) ($block['blockName'] ?? ''), 'dynamics/')) {
+                $html = render_block($block);
+                if (trim($html) !== '') $modules[] = ['id' => $post_id . '-html-' . $index, 'name' => '__html', 'config' => new stdClass(), 'resources' => new stdClass(), 'html' => $html];
+                continue;
+            }
+            $name = substr((string) $block['blockName'], strlen('dynamics/'));
+            $attrs = $block['attrs'] ?? [];
+            $modules[] = [
+                'id' => sanitize_key($attrs['moduleId'] ?? ($post_id . '-' . $index . '-' . $name)),
+                'name' => sanitize_key($name),
+                'config' => is_array($attrs['config'] ?? null) ? $attrs['config'] : new stdClass(),
+                'resources' => is_array($attrs['resources'] ?? null) ? $attrs['resources'] : new stdClass(),
+            ];
+        }
+        return $modules;
     }
 }
 
