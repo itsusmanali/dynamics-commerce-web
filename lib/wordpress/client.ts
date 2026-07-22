@@ -55,3 +55,20 @@ export async function queryWordPressPreview<T>(
   const payload = (await response.json()) as GraphQLResponse<T>;
   return payload.errors?.length ? null : (payload.data ?? null);
 }
+
+export async function queryWordPressOptional<T>(query: string, tags: string[] = []): Promise<T | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(WORDPRESS_CACHE_TAG, ...tags);
+  if (!site.graphqlUrl) return null;
+  try {
+    const response = await fetch(site.graphqlUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    });
+    if (!response.ok) return null;
+    const payload = (await response.json()) as GraphQLResponse<T>;
+    return payload.errors?.length ? null : (payload.data ?? null);
+  } catch { return null; }
+}

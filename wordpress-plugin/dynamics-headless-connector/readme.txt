@@ -3,7 +3,7 @@ Contributors: lumovy
 Tags: headless, nextjs, graphql, vercel
 Requires at least: 6.5
 Requires PHP: 8.0
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 
 Connect WordPress to the Dynamics Commerce Next.js frontend.
@@ -17,3 +17,4 @@ Connect WordPress to the Dynamics Commerce Next.js frontend.
 6. Redeploy Vercel, then click Test connection.
 
 Publishing or updating a page/post automatically refreshes the frontend. WordPress Preview buttons open the secure Next.js preview.
+Permanent redirects can be managed from the same settings screen with one `/old => /new` rule per line.

@@ -11,6 +11,8 @@ export interface SeoData {
   twitterTitle?: string | null;
   twitterDescription?: string | null;
   twitterImage?: { sourceUrl?: string | null } | null;
+  breadcrumbs?: Array<{ text?: string | null; url?: string | null }> | null;
+  schema?: { raw?: string | null } | null;
 }
 
 export interface FeaturedImage {

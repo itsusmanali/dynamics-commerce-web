@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dynamics Headless Connector
  * Description: Connects WordPress to the Dynamics Commerce Next.js frontend with previews, cache revalidation, and connection checks.
- * Version: 1.1.0
+ * Version: 1.2.0
  * Requires at least: 6.5
  * Requires PHP: 8.0
  * Author: Lumovy
@@ -49,6 +49,7 @@ final class Dynamics_Headless_Connector
             'frontend_url' => 'https://dynamics-commerce-web.vercel.app',
             'revalidation_secret' => '',
             'preview_secret' => '',
+            'redirects' => '',
         ]);
     }
 
@@ -85,7 +86,23 @@ final class Dynamics_Headless_Connector
             'frontend_url' => $frontend,
             'revalidation_secret' => sanitize_text_field($input['revalidation_secret'] ?? $current['revalidation_secret']),
             'preview_secret' => sanitize_text_field($input['preview_secret'] ?? $current['preview_secret']),
+            'redirects' => self::sanitize_redirects($input['redirects'] ?? ''),
         ];
+    }
+
+    private static function sanitize_redirects(string $value): string
+    {
+        $valid = [];
+        foreach (preg_split('/\R/', $value) ?: [] as $line) {
+            $line = trim($line);
+            if ($line === '' || str_starts_with($line, '#')) {
+                continue;
+            }
+            if (preg_match('#^(/[^\s]*)\s*(?:=>|\s)\s*(/[^\s]*)$#', $line, $matches) && $matches[1] !== $matches[2]) {
+                $valid[$matches[1]] = $matches[2];
+            }
+        }
+        return implode("\n", array_map(static fn(string $from, string $to): string => $from . ' => ' . $to, array_keys($valid), $valid));
     }
 
     public static function settings_page(): void
@@ -117,6 +134,7 @@ final class Dynamics_Headless_Connector
                     <tr><th><label for="dh_frontend">Frontend URL</label></th><td><input class="regular-text" id="dh_frontend" type="url" name="<?php echo esc_attr(self::OPTION); ?>[frontend_url]" value="<?php echo esc_attr($settings['frontend_url']); ?>" required><p class="description">Your public Vercel URL, without a trailing slash.</p></td></tr>
                     <tr><th><label for="dh_revalidate">Revalidation secret</label></th><td><input class="large-text code" id="dh_revalidate" type="text" name="<?php echo esc_attr(self::OPTION); ?>[revalidation_secret]" value="<?php echo esc_attr($settings['revalidation_secret']); ?>" autocomplete="off"><p class="description">Copy this to Vercel as <code>WORDPRESS_REVALIDATION_SECRET</code>.</p></td></tr>
                     <tr><th><label for="dh_preview">Preview secret</label></th><td><input class="large-text code" id="dh_preview" type="text" name="<?php echo esc_attr(self::OPTION); ?>[preview_secret]" value="<?php echo esc_attr($settings['preview_secret']); ?>" autocomplete="off"><p class="description">Copy this to Vercel as <code>WORDPRESS_PREVIEW_SECRET</code>.</p></td></tr>
+                    <tr><th><label for="dh_redirects">Permanent redirects</label></th><td><textarea class="large-text code" id="dh_redirects" rows="7" name="<?php echo esc_attr(self::OPTION); ?>[redirects]" placeholder="/old-page => /new-page"><?php echo esc_textarea($settings['redirects']); ?></textarea><p class="description">One internal 308 redirect per line, for example <code>/old-page =&gt; /new-page</code>.</p></td></tr>
                 </tbody></table>
                 <?php submit_button(__('Save connection', 'dynamics-headless')); ?>
             </form>
@@ -245,6 +263,19 @@ final class Dynamics_Headless_Connector
                     'modified' => get_post_modified_time(DATE_W3C, true, $post),
                     'type' => $post->post_type,
                 ]);
+            },
+        ]);
+        register_graphql_field('RootQuery', 'dynamicsRedirects', [
+            'type' => 'String',
+            'description' => __('Public permanent redirect rules for the Dynamics frontend.', 'dynamics-headless'),
+            'resolve' => static function (): string {
+                $rules = [];
+                foreach (preg_split('/\R/', self::settings()['redirects']) ?: [] as $line) {
+                    if (preg_match('#^(/[^\s]*)\s*=>\s*(/[^\s]*)$#', trim($line), $matches)) {
+                        $rules[] = ['from' => $matches[1], 'to' => $matches[2]];
+                    }
+                }
+                return wp_json_encode($rules);
             },
         ]);
     }

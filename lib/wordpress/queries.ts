@@ -1,4 +1,4 @@
-import { queryWordPress, queryWordPressPreview } from "./client";
+import { queryWordPress, queryWordPressOptional, queryWordPressPreview } from "./client";
 import type { Page, Post, TaxonomyArchive } from "./types";
 
 export interface WordPressSettings {
@@ -11,6 +11,8 @@ const SEO_FIELDS = `seo {
   title metaDesc canonical metaRobotsNoindex metaRobotsNofollow
   opengraphTitle opengraphDescription opengraphType opengraphImage { sourceUrl }
   twitterTitle twitterDescription twitterImage { sourceUrl }
+  breadcrumbs { text url }
+  schema { raw }
 }`;
 const IMAGE_FIELDS = `featuredImage { node { altText sourceUrl mediaDetails { width height } } }`;
 
@@ -59,26 +61,42 @@ export async function getPreviewById(id: string) {
 }
 
 export async function getAllPosts() {
-  const data = await queryWordPress<{ posts: { nodes: Post[] } }>(
-    `query AllPosts { posts(first: 100, where: { status: PUBLISH }) { nodes {
+  const posts: Post[] = [];
+  let after: string | null = null;
+  for (let page = 0; page < 100; page += 1) {
+    const data: { posts: { nodes: Post[]; pageInfo: { hasNextPage: boolean; endCursor?: string | null } } } | null = await queryWordPress(
+    `query AllPosts($after: String) { posts(first: 100, after: $after, where: { status: PUBLISH }) { nodes {
       databaseId slug title(format: RENDERED) excerpt(format: RENDERED)
       date modified ${IMAGE_FIELDS} ${SEO_FIELDS}
-    } } }`,
-    {},
+    } pageInfo { hasNextPage endCursor } } }`,
+    { after },
     ["posts"],
   );
-  return data?.posts.nodes ?? [];
+    if (!data) break;
+    posts.push(...data.posts.nodes);
+    if (!data.posts.pageInfo.hasNextPage || !data.posts.pageInfo.endCursor) break;
+    after = data.posts.pageInfo.endCursor;
+  }
+  return posts;
 }
 
 export async function getAllPages() {
-  const data = await queryWordPress<{ pages: { nodes: Page[] } }>(
-    `query AllPages { pages(first: 100, where: { status: PUBLISH }) { nodes {
+  const pages: Page[] = [];
+  let after: string | null = null;
+  for (let page = 0; page < 100; page += 1) {
+    const data: { pages: { nodes: Page[]; pageInfo: { hasNextPage: boolean; endCursor?: string | null } } } | null = await queryWordPress(
+    `query AllPages($after: String) { pages(first: 100, after: $after, where: { status: PUBLISH }) { nodes {
       databaseId slug uri title(format: RENDERED) modified parent { node { databaseId } } ${SEO_FIELDS}
-    } } }`,
-    {},
+    } pageInfo { hasNextPage endCursor } } }`,
+    { after },
     ["pages"],
   );
-  return data?.pages.nodes ?? [];
+    if (!data) break;
+    pages.push(...data.pages.nodes);
+    if (!data.pages.pageInfo.hasNextPage || !data.pages.pageInfo.endCursor) break;
+    after = data.pages.pageInfo.endCursor;
+  }
+  return pages;
 }
 
 export async function getWordPressSettings() {
@@ -101,6 +119,18 @@ export async function getPostsByTaxonomy(type: "category" | "tag", slug: string)
     [`${type}:${slug}`, "posts"],
   );
   return data?.posts.nodes ?? [];
+}
+
+export async function getTaxonomyBySlug(type: "category" | "tag", slug: string) {
+  const field = type === "category" ? "category" : "tag";
+  const data = await queryWordPress<Record<string, { name: string; seo?: Page["seo"] } | null>>(
+    `query TaxonomySeo($slug: ID!) {
+      ${field}(id: $slug, idType: SLUG) { name ${SEO_FIELDS} }
+    }`,
+    { slug },
+    [`${type}:${slug}`],
+  );
+  return data?.[field] ?? null;
 }
 
 export async function getTaxonomies() {
@@ -137,4 +167,17 @@ export async function searchWordPress(search: string) {
     [`search:${term.toLowerCase()}`],
   );
   return { pages: data?.pages.nodes ?? [], posts: data?.posts.nodes ?? [] };
+}
+
+export async function getRedirects() {
+  const data = await queryWordPressOptional<{ dynamicsRedirects: string | null }>(
+    `query DynamicsRedirects { dynamicsRedirects }`, ["redirects"],
+  );
+  if (!data?.dynamicsRedirects) return [] as Array<{ from: string; to: string }>;
+  try { return JSON.parse(data.dynamicsRedirects) as Array<{ from: string; to: string }>; }
+  catch { return [] as Array<{ from: string; to: string }>; }
+}
+
+export async function getRedirectForPath(path: string) {
+  return (await getRedirects()).find((rule) => rule.from === path)?.to ?? null;
 }
