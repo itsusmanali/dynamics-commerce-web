@@ -42,7 +42,11 @@ Adding an action to another module follows the same path:
 3. Set `defaultExecution` in code to `server` or `client`.
 4. Resolve it in the server module for `server`, or use the shared TanStack Query data-action hook for `client`.
 
-Axios provides the HTTP layer. TanStack Query handles client caching, request deduplication, cancellation, retry, and stale data. Dynamics Commerce calls use `lib/commerce/client.ts`, which supplies OData headers, API version, OUN, timeout behavior, single-flight token refresh, one retry after a 401, and a session-expired callback without coupling modules to a particular authentication UI.
+Axios provides the HTTP layer. TanStack Query handles client caching, request deduplication, cancellation, retry, and stale data. Dynamics Commerce calls use `lib/api/http/commerce-client.ts`, which supplies OData headers, API version, OUN, timeout behavior, single-flight token refresh, one retry after a 401, and a session-expired callback without coupling modules to a particular authentication UI.
+
+Browser modules call only the same-origin endpoints under `app/api`. Those thin route handlers call feature services under `lib/api/commerce`, keeping upstream URLs, tokens, payload construction, validation, and transformations out of modules and browser bundles. Categories are the reference implementation at `/api/commerce/categories`.
+
+`dataActions` is the source of truth for operation type (`query` or `mutation`), HTTP method, internal API endpoint, and server/client execution. Runtime values do not belong in JSON: query parameters are passed when a query hook is called, while mutation payloads are passed to `mutate(variables)`. Shared factories in `lib/api/query/actions.ts` translate those typed runtime values into Axios requests and TanStack Query behavior.
 
 ## Template extensions
 

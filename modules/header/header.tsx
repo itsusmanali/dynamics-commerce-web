@@ -3,11 +3,16 @@ import { getHeaderData } from "./header.data";
 import { HeaderView } from "./header.view";
 import definition from "./header.definition.json";
 import type { ModuleDataActionDefinition } from "../module.types";
+import { getCategories } from "@/lib/api/commerce/categories/categories.server";
 
 export default async function HeaderModule(props: HeaderProps) {
   const mode = props.config.menuMode === "retail" || props.config.menuMode === "authored" ? props.config.menuMode : "all";
   const execution = definition.dataActions.menu.defaultExecution === "client" ? "client" : "server";
   const action = definition.dataActions.menu as ModuleDataActionDefinition;
-  const data = execution === "server" ? await getHeaderData(mode, props.config.wordpressMenuSlug) : null;
-  return <HeaderView {...props} data={data} execution={execution} action={action} />;
+  const categoriesAction = definition.dataActions.categories as ModuleDataActionDefinition;
+  const [data, categories] = await Promise.all([
+    execution === "server" ? getHeaderData(mode, props.config.wordpressMenuSlug) : null,
+    categoriesAction.defaultExecution === "server" && mode !== "authored" ? getCategories({ presentation: "tree" }) : null,
+  ]);
+  return <HeaderView {...props} data={data} execution={execution} action={action} categoriesAction={categoriesAction} initialCategories={categories} />;
 }

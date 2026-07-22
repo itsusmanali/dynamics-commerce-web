@@ -4,7 +4,7 @@ import "@/styles/site.scss";
 import { SiteFooter } from "@/components/site-footer";
 import { defaultHeaderModule, ModuleRenderer } from "@/components/module-renderer";
 import { getGlobalModules } from "@/lib/wordpress/queries";
-import { QueryProvider } from "@/components/query-provider";
+import { ApiQueryProvider } from "@/lib/api/query/query-client";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
@@ -25,7 +25,7 @@ export default async function RootLayout({
   const [header, footer] = await Promise.all([getGlobalModules("header"), getGlobalModules("footer")]);
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col"><Suspense><QueryProvider><ModuleRenderer modules={header.length ? header : [defaultHeaderModule]} />{children}{footer.length ? <ModuleRenderer modules={footer} /> : <SiteFooter />}</QueryProvider></Suspense></body>
+      <body className="min-h-full flex flex-col"><Suspense><ApiQueryProvider><ModuleRenderer modules={header.length ? header : [defaultHeaderModule]} />{children}{footer.length ? <ModuleRenderer modules={footer} /> : <SiteFooter />}</ApiQueryProvider></Suspense></body>
     </html>
   );
 }

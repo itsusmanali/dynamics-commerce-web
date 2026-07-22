@@ -3,7 +3,7 @@ import type { Page, Post, TaxonomyArchive } from "./types";
 import type { ModuleInstance } from "@/modules/module.types";
 import type { PageTemplateSettings } from "@/templates/template.types";
 import type { MenuItem } from "@/lib/demo-menu";
-import { defaultCommerceConfig, type CommerceConfig } from "@/lib/commerce/config";
+import { defaultCommerceConfig, type CommerceConfig } from "@/lib/api/commerce/config";
 
 export interface WordPressSettings {
   title: string;
