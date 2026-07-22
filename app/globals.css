@@ -8,15 +8,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 body {
@@ -24,3 +17,8 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.wp-content, .site-shell { width: min(100% - 2rem, 75rem); margin-inline: auto; }
+.wp-content { padding-block: 3rem; }
+.wp-content :where(img, video, iframe) { max-width: 100%; height: auto; }
+.wp-content :where(h1, h2, h3) { text-wrap: balance; }
