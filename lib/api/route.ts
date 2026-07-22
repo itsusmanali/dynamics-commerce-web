@@ -16,3 +16,15 @@ export function createGetRoute<T>(handler: (request: Request) => Promise<T>) {
     }
   };
 }
+
+export function createMutationRoute<TVariables, TData>(handler: (variables: TVariables, request: Request) => Promise<TData>) {
+  return async function POST(request: Request) {
+    const requestId = crypto.randomUUID();
+    try {
+      const variables = await request.json() as TVariables;
+      return NextResponse.json({ data: await handler(variables, request), meta: { requestId } }, { headers: { "Cache-Control": "private, no-store", "X-Request-Id": requestId } });
+    } catch (error) {
+      return apiErrorResponse(error, requestId);
+    }
+  };
+}
