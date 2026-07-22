@@ -230,17 +230,6 @@ function parseModules(value?: string | null) {
   catch { return [] as ModuleInstance[]; }
 }
 
-export async function getGlobalModules(slot: "header" | "footer") {
-  const data = await queryWordPressOptional<{ dynamicsGlobals: string | null }>(
-    `query DynamicsGlobals { dynamicsGlobals }`, ["modules", "globals"],
-  );
-  if (!data?.dynamicsGlobals) return [] as ModuleInstance[];
-  try {
-    const globals = JSON.parse(data.dynamicsGlobals) as Record<string, ModuleInstance[]>;
-    return globals[slot] ?? [];
-  } catch { return [] as ModuleInstance[]; }
-}
-
 export async function getContentModules(type: "page" | "post", databaseId: number) {
   const field = type === "page" ? "page" : "post";
   const data = await queryWordPressOptional<Record<string, { dynamicsModules?: string | null } | null>>(

@@ -1,8 +1,8 @@
 # WordPress connector installation
 
 1. In WordPress, open **Plugins → Add New Plugin → Upload Plugin**.
-2. Upload `dynamics-headless-connector.zip`, install, and activate it.
-3. Open **Settings → Headless Frontend**.
+2. Upload `lumovy-commerce-studio.zip`, install, and activate it.
+3. Open **Settings → Commerce Studio**.
 4. Keep the frontend URL as `https://dynamics-commerce-web.vercel.app` and click **Save connection**.
 5. Copy the generated revalidation and preview secrets.
 6. In Vercel, add the environment variables shown in the repository `.env.example`, using the copied secrets.

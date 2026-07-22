@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 /**
- * Plugin Name: Dynamics Headless Connector
- * Description: Connects WordPress to the Dynamics Commerce Next.js frontend with previews, cache revalidation, and connection checks.
- * Version: 2.3.1
+ * Plugin Name: Lumovy Commerce Studio
+ * Description: Visual WordPress authoring for the Lumovy Next.js and Dynamics 365 Commerce storefront.
+ * Version: 2.4.0
  * Requires at least: 6.5
  * Requires PHP: 8.0
  * Author: Lumovy
@@ -89,8 +89,6 @@ final class Dynamics_Headless_Connector
             'revalidation_secret' => '',
             'preview_secret' => '',
             'redirects' => '',
-            'header_fragment' => 0,
-            'footer_fragment' => 0,
             'commerce_api_base_url' => 'https://scunu608glj43499030-rs.su.retail.dynamics.com',
             'commerce_image_base_url' => 'https://images-us-prod.cms.commerce.dynamics.com/cms/api/fgnsbnhhtw/imageFileData/search?fileName=/',
             'commerce_api_version' => '7.3',
@@ -102,8 +100,8 @@ final class Dynamics_Headless_Connector
     public static function admin_menu(): void
     {
         add_options_page(
-            __('Headless Frontend', 'dynamics-headless'),
-            __('Headless Frontend', 'dynamics-headless'),
+            __('Commerce Studio', 'dynamics-headless'),
+            __('Commerce Studio', 'dynamics-headless'),
             'manage_options',
             self::PAGE,
             [self::class, 'settings_page']
@@ -133,8 +131,6 @@ final class Dynamics_Headless_Connector
             'revalidation_secret' => sanitize_text_field($input['revalidation_secret'] ?? $current['revalidation_secret']),
             'preview_secret' => sanitize_text_field($input['preview_secret'] ?? $current['preview_secret']),
             'redirects' => self::sanitize_redirects($input['redirects'] ?? ''),
-            'header_fragment' => absint($input['header_fragment'] ?? 0),
-            'footer_fragment' => absint($input['footer_fragment'] ?? 0),
             'commerce_api_base_url' => self::sanitize_https_url($input['commerce_api_base_url'] ?? '', $current['commerce_api_base_url']),
             'commerce_image_base_url' => self::sanitize_https_url($input['commerce_image_base_url'] ?? '', $current['commerce_image_base_url']),
             'commerce_api_version' => preg_match('/^\d+(?:\.\d+)?$/', (string) ($input['commerce_api_version'] ?? '')) ? sanitize_text_field($input['commerce_api_version']) : $current['commerce_api_version'],
@@ -174,11 +170,10 @@ final class Dynamics_Headless_Connector
         $graphql_ok = class_exists('WPGraphQL') || function_exists('graphql');
         $yoast_ok = defined('WPSEO_VERSION');
         $notice = sanitize_key($_GET['dynamics_status'] ?? '');
-        $fragments = get_posts(['post_type' => 'dynamics_fragment', 'post_status' => 'publish', 'numberposts' => -1, 'orderby' => 'title', 'order' => 'ASC']);
         $sync = wp_parse_args(get_option(self::SYNC_OPTION, []), ['state' => 'never', 'hash' => '', 'lastSuccess' => 0, 'lastAttempt' => 0, 'error' => '']);
         ?>
         <div class="wrap">
-            <h1><?php esc_html_e('Dynamics Headless Frontend', 'dynamics-headless'); ?></h1>
+            <h1><?php esc_html_e('Lumovy Commerce Studio', 'dynamics-headless'); ?></h1>
             <p><?php esc_html_e('Publish in WordPress as usual. This connector handles previews and tells the Next.js site when content changes.', 'dynamics-headless'); ?></p>
             <?php if ($notice === 'success') : ?><div class="notice notice-success"><p><?php esc_html_e('Connection successful. WordPress, GraphQL, and Next.js agree.', 'dynamics-headless'); ?></p></div><?php endif; ?>
             <?php if ($notice === 'failed') : ?><div class="notice notice-error"><p><?php esc_html_e('Connection failed. Confirm the Vercel environment variables and deploy the latest frontend.', 'dynamics-headless'); ?></p></div><?php endif; ?>
@@ -200,8 +195,6 @@ final class Dynamics_Headless_Connector
                     <tr><th><label for="dh_revalidate">Revalidation secret</label></th><td><input class="large-text code" id="dh_revalidate" type="text" name="<?php echo esc_attr(self::OPTION); ?>[revalidation_secret]" value="<?php echo esc_attr($settings['revalidation_secret']); ?>" autocomplete="off"><p class="description">Copy this to Vercel as <code>WORDPRESS_REVALIDATION_SECRET</code>.</p></td></tr>
                     <tr><th><label for="dh_preview">Preview secret</label></th><td><input class="large-text code" id="dh_preview" type="text" name="<?php echo esc_attr(self::OPTION); ?>[preview_secret]" value="<?php echo esc_attr($settings['preview_secret']); ?>" autocomplete="off"><p class="description">Copy this to Vercel as <code>WORDPRESS_PREVIEW_SECRET</code>.</p></td></tr>
                     <tr><th><label for="dh_redirects">Permanent redirects</label></th><td><textarea class="large-text code" id="dh_redirects" rows="7" name="<?php echo esc_attr(self::OPTION); ?>[redirects]" placeholder="/old-page => /new-page"><?php echo esc_textarea($settings['redirects']); ?></textarea><p class="description">One internal 308 redirect per line, for example <code>/old-page =&gt; /new-page</code>.</p></td></tr>
-                    <tr><th><label for="dh_header_fragment">Global header fragment</label></th><td><select id="dh_header_fragment" name="<?php echo esc_attr(self::OPTION); ?>[header_fragment]"><option value="0">Use code default</option><?php foreach ($fragments as $fragment) : ?><option value="<?php echo esc_attr($fragment->ID); ?>" <?php selected($settings['header_fragment'], $fragment->ID); ?>><?php echo esc_html($fragment->post_title); ?></option><?php endforeach; ?></select></td></tr>
-                    <tr><th><label for="dh_footer_fragment">Global footer fragment</label></th><td><select id="dh_footer_fragment" name="<?php echo esc_attr(self::OPTION); ?>[footer_fragment]"><option value="0">Use code default</option><?php foreach ($fragments as $fragment) : ?><option value="<?php echo esc_attr($fragment->ID); ?>" <?php selected($settings['footer_fragment'], $fragment->ID); ?>><?php echo esc_html($fragment->post_title); ?></option><?php endforeach; ?></select></td></tr>
                     <tr><th colspan="2"><h2><?php esc_html_e('Dynamics 365 Commerce', 'dynamics-headless'); ?></h2><p class="description"><?php esc_html_e('Advanced connection defaults. Leave these unchanged unless your Commerce environment differs.', 'dynamics-headless'); ?></p></th></tr>
                     <tr><th><label for="dh_commerce_api">Commerce API URL</label></th><td><input class="large-text code" id="dh_commerce_api" type="url" name="<?php echo esc_attr(self::OPTION); ?>[commerce_api_base_url]" value="<?php echo esc_attr($settings['commerce_api_base_url']); ?>" required></td></tr>
                     <tr><th><label for="dh_commerce_images">Commerce image URL</label></th><td><input class="large-text code" id="dh_commerce_images" type="url" name="<?php echo esc_attr(self::OPTION); ?>[commerce_image_base_url]" value="<?php echo esc_attr($settings['commerce_image_base_url']); ?>" required></td></tr>
@@ -418,16 +411,6 @@ final class Dynamics_Headless_Connector
                 return wp_json_encode(self::template_settings((int) get_post_meta($page_id, '_dynamics_template_id', true)));
             },
         ]);
-        register_graphql_field('RootQuery', 'dynamicsGlobals', [
-            'type' => 'String',
-            'resolve' => static function (): string {
-                $settings = self::settings();
-                return wp_json_encode([
-                    'header' => self::composition_for_post((int) $settings['header_fragment'], false),
-                    'footer' => self::composition_for_post((int) $settings['footer_fragment'], false),
-                ]);
-            },
-        ]);
         register_graphql_field('RootQuery', 'dynamicsCommerceConfig', [
             'type' => 'String',
             'description' => __('Public Dynamics Commerce connection settings. Authentication tokens are never included.', 'dynamics-headless'),
@@ -509,7 +492,7 @@ final class Dynamics_Headless_Connector
     {
         $sync = wp_parse_args(get_option(self::SYNC_OPTION, []), ['lastAttempt' => 0]);
         if ((int) $sync['lastAttempt'] < time() - 300) self::sync_modules();
-        wp_enqueue_script('dynamics-module-editor', plugins_url('module-editor.js', __FILE__), ['wp-blocks', 'wp-element', 'wp-components', 'wp-block-editor', 'wp-i18n'], '2.3.1', true);
+        wp_enqueue_script('dynamics-module-editor', plugins_url('module-editor.js', __FILE__), ['wp-blocks', 'wp-element', 'wp-components', 'wp-block-editor', 'wp-i18n'], '2.4.0', true);
         $fragments = array_map(static fn(WP_Post $post): array => ['label' => $post->post_title, 'value' => $post->ID], get_posts(['post_type' => 'dynamics_fragment', 'post_status' => 'publish', 'numberposts' => -1]));
         wp_localize_script('dynamics-module-editor', 'DynamicsModuleEditor', ['definitions' => self::module_definitions(), 'fragments' => $fragments, 'defaultLocale' => substr(get_locale(), 0, 2)]);
     }

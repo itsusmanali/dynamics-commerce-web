@@ -56,9 +56,9 @@ A real WordPress page at a requested path always wins. Otherwise the catch-all r
 
 ## WordPress synchronization
 
-After deploying Next.js, the connector automatically downloads the generated module manifest every five minutes and when an editor opens with stale definitions. Settings > Headless Frontend also has a manual Sync Modules button.
+After deploying Next.js, Lumovy Commerce Studio automatically downloads the generated module manifest every five minutes and when an editor opens with stale definitions. Settings > Commerce Studio also has a manual Sync Modules button.
 
-When PHP/plugin code changes, rebuild and upload the connector ZIP, then activate/update it in WordPress. Manifest-only module definition changes do not require another ZIP.
+When PHP/plugin code changes, rebuild and upload `lumovy-commerce-studio.zip`, then activate/update it in WordPress. Manifest-only module definition changes do not require another ZIP.
 
 ## Validation
 

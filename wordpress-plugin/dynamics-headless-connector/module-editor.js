@@ -28,7 +28,8 @@
   const SlotEdit = ({ attributes }) => {
     const wildcard = (attributes.allowedModules || []).includes("*");
     const names = wildcard ? definitionNames : (attributes.allowedModules || []);
-    const allowedBlocks = names.map((name) => `dynamics/${name}`);
+    // Reusable fragments are valid in every slot, even when the slot restricts module types.
+    const allowedBlocks = [...names.map((name) => `dynamics/${name}`), "dynamics/fragment"];
     return el(
       "section",
       useBlockProps({ className: "dynamics-module-slot", style: { border: "1px dashed #8c8f94", background: "#f8f9fa", padding: "12px", margin: "8px 0", minHeight: "92px" } }),
@@ -73,5 +74,5 @@
   });
 
   const FragmentEdit = ({ attributes, setAttributes }) => el("div", useBlockProps(), el(SelectControl, { label: "Fragment", value: attributes.fragmentId, options: [{ label: "Select a fragment", value: 0 }, ...(settings.fragments || [])], onChange: (value) => setAttributes({ fragmentId: Number(value) }) }));
-  registerBlockType("dynamics/fragment", { apiVersion: 3, title: "Module fragment", icon: "admin-page", category: "design", attributes: { fragmentId: { type: "number", default: 0 } }, edit: FragmentEdit, save: () => null });
+  registerBlockType("dynamics/fragment", { apiVersion: 3, title: "Reusable fragment", description: "Insert a reusable module composition into this slot.", icon: "admin-page", category: "design", parent: ["dynamics/slot"], supports: { html: false, reusable: false }, attributes: { fragmentId: { type: "number", default: 0 } }, edit: FragmentEdit, save: () => null });
 })(window.wp, window.DynamicsModuleEditor || { definitions: [], fragments: [], defaultLocale: "en" });

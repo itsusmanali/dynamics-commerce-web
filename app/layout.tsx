@@ -7,7 +7,6 @@ import "./globals.css";
 import "@/styles/site.scss";
 import { SiteFooter } from "@/components/site-footer";
 import { defaultHeaderModule, ModuleRenderer } from "@/components/module-renderer";
-import { getGlobalModules } from "@/lib/wordpress/queries";
 import { ApiQueryProvider } from "@/lib/api/query/query-client";
 import { Suspense } from "react";
 
@@ -26,10 +25,9 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [header, footer] = await Promise.all([getGlobalModules("header"), getGlobalModules("footer")]);
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col"><Suspense><ApiQueryProvider><ModuleRenderer modules={header.length ? header : [defaultHeaderModule]} />{children}{footer.length ? <ModuleRenderer modules={footer} /> : <SiteFooter />}</ApiQueryProvider></Suspense></body>
+      <body className="min-h-full flex flex-col"><Suspense><ApiQueryProvider><div data-global-header><ModuleRenderer modules={[defaultHeaderModule]} /></div>{children}<div className="mt-auto" data-global-footer><SiteFooter /></div></ApiQueryProvider></Suspense></body>
     </html>
   );
 }
