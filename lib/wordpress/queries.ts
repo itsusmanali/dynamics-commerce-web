@@ -127,7 +127,7 @@ export async function searchWordPress(search: string) {
   }>(
     `query Search($search: String!) {
       pages(first: 50, where: { search: $search, status: PUBLISH }) { nodes {
-        databaseId slug uri title(format: RENDERED) excerpt(format: RENDERED) ${SEO_FIELDS}
+        databaseId slug uri title(format: RENDERED) ${SEO_FIELDS}
       } }
       posts(first: 50, where: { search: $search, status: PUBLISH }) { nodes {
         databaseId slug title(format: RENDERED) excerpt(format: RENDERED) date ${IMAGE_FIELDS} ${SEO_FIELDS}
