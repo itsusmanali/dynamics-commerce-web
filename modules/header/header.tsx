@@ -10,12 +10,31 @@ import { loadDataAction } from "@/lib/api/data-actions/server";
 import type { CategoryNode, HeaderData } from "./header.data";
 
 export default async function HeaderModule(props: HeaderProps) {
-  const mode = props.config.menuMode === "retail" || props.config.menuMode === "authored" ? props.config.menuMode : "all";
+  const mode =
+    props.config.menuMode === "retail" || props.config.menuMode === "authored"
+      ? props.config.menuMode
+      : "all";
   const action = definition.dataActions.menu as ModuleDataActionDefinition;
-  const categoriesAction = definition.dataActions.categories as ModuleDataActionDefinition;
+  const categoriesAction = definition.dataActions
+    .categories as ModuleDataActionDefinition;
   const [data, categories] = await Promise.all([
-    loadDataAction<HeaderData>(action, { mode, menuSlug: props.config.wordpressMenuSlug || "primary" }),
-    mode === "authored" ? null : loadDataAction<CategoryNode[]>(categoriesAction, { presentation: "tree" }),
+    loadDataAction<HeaderData>(action, {
+      mode,
+      menuSlug: props.config.wordpressMenuSlug || "primary",
+    }),
+    mode === "authored"
+      ? null
+      : loadDataAction<CategoryNode[]>(categoriesAction, {
+          presentation: "tree",
+        }),
   ]);
-  return <HeaderView {...props} data={data} action={action} categoriesAction={categoriesAction} initialCategories={categories} />;
+  return (
+    <HeaderView
+      {...props}
+      data={data}
+      action={action}
+      categoriesAction={categoriesAction}
+      initialCategories={categories}
+    />
+  );
 }
