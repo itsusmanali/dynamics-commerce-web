@@ -6,9 +6,10 @@ export async function POST(request: Request) {
   if (!process.env.WORDPRESS_REVALIDATION_SECRET || supplied !== process.env.WORDPRESS_REVALIDATION_SECRET) return Response.json({ revalidated: false }, { status: 401 });
   const payload = await request.json().catch(() => ({})) as { slug?: string; type?: "post" | "page" };
   const slug = payload.slug?.replace(/^\/+|\/+$/g, "");
-  revalidateTag(WORDPRESS_CACHE_TAG, "max");
+  // CMS webhooks need the next visitor to receive the new content immediately.
+  revalidateTag(WORDPRESS_CACHE_TAG, { expire: 0 });
   if (slug && /^[a-z0-9/_-]+$/i.test(slug)) {
-    revalidateTag(`${payload.type ?? "page"}:${payload.type === "page" ? `/${slug}/` : slug}`, "max");
+    revalidateTag(`${payload.type ?? "page"}:${payload.type === "page" ? `/${slug}/` : slug}`, { expire: 0 });
     revalidatePath(payload.type === "post" ? `/blog/${slug}` : `/${slug}`);
   }
   return Response.json({ revalidated: true, slug: slug ?? null });

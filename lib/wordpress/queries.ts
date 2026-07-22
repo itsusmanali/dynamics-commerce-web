@@ -1,6 +1,12 @@
 import { queryWordPress, queryWordPressPreview } from "./client";
 import type { Page, Post } from "./types";
 
+export interface WordPressSettings {
+  title: string;
+  description: string;
+  url: string;
+}
+
 const SEO_FIELDS = `seo { title metaDesc canonical opengraphImage { sourceUrl } }`;
 const IMAGE_FIELDS = `featuredImage { node { altText sourceUrl mediaDetails { width height } } }`;
 
@@ -33,6 +39,21 @@ export async function getPostBySlug(slug: string, preview = false) {
   return data?.post ?? null;
 }
 
+export async function getPreviewById(id: string) {
+  const data = await queryWordPressPreview<{ dynamicsPreview: string | null }>(
+    `query DynamicsPreview($id: ID!, $secret: String!) {
+      dynamicsPreview(id: $id, secret: $secret)
+    }`,
+    { id, secret: process.env.WORDPRESS_PREVIEW_SECRET ?? "" },
+  );
+  if (!data?.dynamicsPreview) return null;
+  try {
+    return JSON.parse(data.dynamicsPreview) as Page | Post;
+  } catch {
+    return null;
+  }
+}
+
 export async function getAllPosts() {
   const data = await queryWordPress<{ posts: { nodes: Post[] } }>(
     `query AllPosts { posts(first: 100, where: { status: PUBLISH }) { nodes {
@@ -54,6 +75,15 @@ export async function getAllPages() {
     ["pages"],
   );
   return data?.pages.nodes ?? [];
+}
+
+export async function getWordPressSettings() {
+  const data = await queryWordPress<{ generalSettings: WordPressSettings }>(
+    `query WordPressSettings { generalSettings { title description url } }`,
+    {},
+    ["settings"],
+  );
+  return data?.generalSettings ?? null;
 }
 
 export async function getPostsByTaxonomy(type: "category" | "tag", slug: string) {
