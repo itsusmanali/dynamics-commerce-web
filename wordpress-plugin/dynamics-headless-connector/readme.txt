@@ -3,7 +3,7 @@ Contributors: lumovy
 Tags: headless, nextjs, graphql, vercel
 Requires at least: 6.5
 Requires PHP: 8.0
-Stable tag: 2.3.0
+Stable tag: 2.3.1
 License: GPLv2 or later
 
 Connect WordPress to the Dynamics Commerce Next.js frontend.

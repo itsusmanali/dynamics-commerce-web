@@ -29,9 +29,22 @@
     const wildcard = (attributes.allowedModules || []).includes("*");
     const names = wildcard ? definitionNames : (attributes.allowedModules || []);
     const allowedBlocks = names.map((name) => `dynamics/${name}`);
-    return el("section", useBlockProps({ className: "dynamics-module-slot", style: { border: "1px dashed #8c8f94", padding: "12px", margin: "8px 0" } }), el("strong", {}, attributes.friendlyName || attributes.slotName || "Slot"), attributes.description ? el("p", { className: "description" }, attributes.description) : null, el(InnerBlocks, { allowedBlocks, renderAppender: InnerBlocks.ButtonBlockAppender }));
+    return el(
+      "section",
+      useBlockProps({ className: "dynamics-module-slot", style: { border: "1px dashed #8c8f94", background: "#f8f9fa", padding: "12px", margin: "8px 0", minHeight: "92px" } }),
+      el("div", { style: { marginBottom: "10px" } },
+        el("strong", { style: { display: "block" } }, attributes.friendlyName || attributes.slotName || "Slot"),
+        attributes.description ? el("p", { className: "description" }, attributes.description) : null,
+        el("small", { style: { color: "#646970" } }, "Add one or more modules below."),
+      ),
+      el(InnerBlocks, {
+        allowedBlocks,
+        templateLock: false,
+        renderAppender: () => el(InnerBlocks.ButtonBlockAppender),
+      }),
+    );
   };
-  registerBlockType("dynamics/slot", { apiVersion: 3, title: "Dynamics Slot", icon: "insert", category: "design", parent: definitionNames.map((name) => `dynamics/${name}`), attributes: { slotName: { type: "string" }, friendlyName: { type: "string" }, description: { type: "string" }, allowedModules: { type: "array", default: ["*"] } }, edit: SlotEdit, save: () => el(InnerBlocks.Content) });
+  registerBlockType("dynamics/slot", { apiVersion: 3, title: "Module Slot", description: "A group-style area that accepts nested modules.", icon: "screenoptions", category: "design", parent: definitionNames.map((name) => `dynamics/${name}`), supports: { html: false, reusable: false }, attributes: { slotName: { type: "string" }, friendlyName: { type: "string" }, description: { type: "string" }, allowedModules: { type: "array", default: ["*"] } }, edit: SlotEdit, save: () => el(InnerBlocks.Content) });
 
   definitions.forEach((definition) => {
     const ModuleEdit = ({ attributes, setAttributes, clientId }) => {
