@@ -26,15 +26,25 @@ npm run modules:generate
 ## Create an API route
 
 ```bash
-npm run api:create -- promotions
+npm run api:create -- promotions promo-banner client
 ```
 
-The script creates `app/api/promotions/route.ts` with a working dummy GET. Put external services behind a Next.js API route. Browser modules should call `/api/...`, not Microsoft or another external host directly.
+This one command creates the Commerce API, creates its Next.js route, adds it to `promo-banner.definition.json`, and selects client execution.
+
+You normally edit only `app/api/commerce/promotions/Promotions.ts`. It contains five numbered values:
+
+1. Commerce API path.
+2. Upstream method: GET, POST, PUT, PATCH or DELETE.
+3. Static or dynamic payload.
+4. Commerce query parameters.
+5. Returned data.
+
+The Commerce base URL, API version, OUN, channel settings, Axios instance, token interceptor, refresh handling, errors and React Query integration are already connected.
 
 ## Add a GET data action
 
 ```bash
-npm run action:create -- promo-banner promotions /api/promotions client
+npm run action:create -- promo-banner promotions /api/commerce/promotions client
 ```
 
 The result is deliberately small:
@@ -42,7 +52,7 @@ The result is deliberately small:
 ```json
 "dataActions": {
   "promotions": {
-    "endpoint": "/api/promotions",
+    "endpoint": "/api/commerce/promotions",
     "method": "GET",
     "execution": "client"
   }
