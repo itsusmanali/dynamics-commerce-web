@@ -15,7 +15,7 @@
       "options": [
         { "label": "Standard", "value": "standard" },
         { "label": "Centered", "value": "centered" },
-        { "label": "Centered", "value": "left test" }
+        { "label": "lefty test", "value": "lefty test" }
       ]
     },
     "sticky": {
