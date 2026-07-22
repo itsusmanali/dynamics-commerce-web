@@ -6,19 +6,59 @@
   "categories": ["global", "navigation"],
   "tags": ["menu", "navigation", "commerce"],
   "config": {
-    "menuMode": { "friendlyName": "Menu items", "type": "select", "default": "all", "group": "Data", "options": [{ "label": "All", "value": "all" }, { "label": "Retail only", "value": "retail" }, { "label": "WordPress only", "value": "authored" }] },
-    "wordpressMenuSlug": { "friendlyName": "WordPress menu slug", "type": "string", "default": "primary", "group": "Data" },
-    "showSearch": { "friendlyName": "Show search", "type": "boolean", "default": true, "group": "Features" }
+    "menuMode": {
+      "friendlyName": "Menu items",
+      "type": "select",
+      "default": "all",
+      "group": "Data",
+      "options": [
+        { "label": "All", "value": "all" },
+        { "label": "Retail only", "value": "retail" },
+        { "label": "WordPress only", "value": "authored" }
+      ]
+    },
+    "wordpressMenuSlug": {
+      "friendlyName": "WordPress menu slug",
+      "type": "string",
+      "default": "primary",
+      "group": "Data"
+    },
+    "showSearch": {
+      "friendlyName": "Show search",
+      "type": "boolean",
+      "default": true,
+      "group": "Features"
+    }
   },
   "resources": {
-    "menuLabel": { "value": "Primary navigation", "comment": "Accessible navigation label." },
-    "openLabel": { "value": "Open menu", "comment": "Mobile open button label." },
-    "closeLabel": { "value": "Close menu", "comment": "Mobile close button label." },
+    "menuLabel": {
+      "value": "Primary navigation",
+      "comment": "Accessible navigation label."
+    },
+    "openLabel": {
+      "value": "Open menu",
+      "comment": "Mobile open button label."
+    },
+    "closeLabel": {
+      "value": "Close menu",
+      "comment": "Mobile close button label."
+    },
     "searchLabel": { "value": "Search", "comment": "Search link label." },
-    "loadingLabel": { "value": "Loading navigation…", "comment": "Loading text." }
+    "loadingLabel": {
+      "value": "Loading navigation…",
+      "comment": "Loading text."
+    }
   },
   "dataActions": {
-    "menu": { "endpoint": "/api/navigation", "method": "GET", "execution": "client" },
-    "categories": { "endpoint": "/api/commerce/categories", "method": "GET", "execution": "client" }
+    "menu": {
+      "endpoint": "/api/navigation",
+      "method": "GET",
+      "execution": "client"
+    },
+    "categories": {
+      "endpoint": "/api/commerce/categories",
+      "method": "GET",
+      "execution": "client"
+    }
   }
 }

@@ -7,9 +7,12 @@ import type {
   SimpleProduct,
 } from "@/types/commerceTypes.g";
 import { commerceRequest } from "@/lib/api/commerce/request";
+import { getCommerceConfig } from "@/lib/wordpress/queries";
+
+export interface StorefrontProduct extends SimpleProduct { imageUrl?: string }
 
 export interface ProductsResponse {
-  products: SimpleProduct[];
+  products: StorefrontProduct[];
   totalCount: number;
 }
 
@@ -22,7 +25,7 @@ export async function SearchProducts(
   const refinementPayload = refinements
     ? (JSON.parse(refinements) as SearchRefinerValue[])
     : undefined;
-  const response = await commerceRequest<{
+  const [response, config] = await Promise.all([commerceRequest<{
     value?: SimpleProduct[];
     "@odata.count"?: number;
   }>({
@@ -47,9 +50,9 @@ export async function SearchProducts(
       $orderby: search.get("sorting") || "RANKING desc",
       $count: true,
     },
-  });
+  }), getCommerceConfig()]);
   return {
-    products: response.value ?? [],
+    products: (response.value ?? []).map((product) => ({ ...product, imageUrl: product.PrimaryImageUrl ? (/^https?:\/\//i.test(product.PrimaryImageUrl) ? product.PrimaryImageUrl : `${config.baseImageUrl}${product.PrimaryImageUrl.replace(/^\/+/, "")}`) : undefined })),
     totalCount: response["@odata.count"] ?? 0,
   };
 }

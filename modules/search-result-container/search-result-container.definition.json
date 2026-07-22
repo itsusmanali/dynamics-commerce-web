@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "friendlyName": "Search Result Container",
+  "name": "search-result-container",
+  "description": "Displays Commerce products for the category selected in the navigation URL.",
+  "categories": ["content"],
+  "tags": ["products", "category", "plp"],
+  "config": {
+    "title": {
+      "friendlyName": "Title",
+      "type": "string",
+      "default": "Products",
+      "group": "Content"
+    },
+    "pageSize": {
+      "friendlyName": "Products per load",
+      "description": "Number of products loaded initially and whenever Load more is selected.",
+      "type": "number",
+      "default": 12,
+      "group": "Content"
+    },
+    "columns": {
+      "friendlyName": "Desktop columns",
+      "type": "select",
+      "default": "4",
+      "group": "Layout",
+      "options": [
+        { "label": "Two", "value": "2" },
+        { "label": "Three", "value": "3" },
+        { "label": "Four", "value": "4" }
+      ]
+    },
+    "showDescription": {
+      "friendlyName": "Show descriptions",
+      "type": "boolean",
+      "default": false,
+      "group": "Content"
+    },
+    "currency": {
+      "friendlyName": "Currency code",
+      "description": "ISO currency code used to format product prices, for example USD.",
+      "type": "string",
+      "default": "USD",
+      "group": "Content"
+    },
+    "className": {
+      "friendlyName": "CSS classes",
+      "type": "string",
+      "default": "",
+      "group": "Advanced"
+    }
+  },
+  "resources": {
+    "loadingLabel": {
+      "value": "Loading products…",
+      "comment": "Shown during the first request."
+    },
+    "loadMoreLabel": {
+      "value": "Load more",
+      "comment": "Pagination button label."
+    },
+    "loadingMoreLabel": {
+      "value": "Loading more…",
+      "comment": "Pagination button busy label."
+    },
+    "emptyLabel": {
+      "value": "No products were found in this category.",
+      "comment": "Empty category message."
+    },
+    "errorLabel": {
+      "value": "Products could not be loaded. Please try again.",
+      "comment": "API error message."
+    },
+    "retryLabel": {
+      "value": "Try again",
+      "comment": "API retry button label."
+    },
+    "categoryMissingLabel": {
+      "value": "This page does not match a Commerce category.",
+      "comment": "Shown when the URL cannot be matched to a category."
+    }
+  },
+  "dataActions": {
+    "categories": {
+      "endpoint": "/api/commerce/categories",
+      "method": "GET",
+      "execution": "client"
+    },
+    "products": {
+      "endpoint": "/api/commerce/products",
+      "method": "GET",
+      "execution": "client"
+    }
+  }
+}
