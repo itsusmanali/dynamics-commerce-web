@@ -11,7 +11,7 @@ Each folder is one portable Next.js + Gutenberg module. The JSON definition is t
 - `<name>.view.tsx`: render-only React view.
 - `<name>.module.scss`: optional scoped SCSS. Tailwind classes are supported in every TSX file.
 
-Run `npm run modules:generate` after adding or changing a definition. It generates props, the static Next.js module registry, and the WordPress `modules-manifest.json`. Dev and production builds run it automatically.
+Run `npm run modules:generate` after adding or changing a definition. It generates props, the static Next.js module registry, and the fallback WordPress `modules-manifest.json`. Dev and production builds run it automatically. Once Connector 2.1 is installed, WordPress automatically synchronizes the deployed manifest from Vercel; definition changes do not require another plugin upload.
 
 ## Supported authoring fields
 

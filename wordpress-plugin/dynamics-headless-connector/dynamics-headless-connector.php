@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dynamics Headless Connector
  * Description: Connects WordPress to the Dynamics Commerce Next.js frontend with previews, cache revalidation, and connection checks.
- * Version: 2.0.0
+ * Version: 2.1.0
  * Requires at least: 6.5
  * Requires PHP: 8.0
  * Author: Lumovy
@@ -18,10 +18,17 @@ final class Dynamics_Headless_Connector
 {
     private const OPTION = 'dynamics_headless_settings';
     private const PAGE = 'dynamics-headless';
+    private const MANIFEST_OPTION = 'dynamics_module_manifest';
+    private const SYNC_OPTION = 'dynamics_module_sync_status';
+    private const SYNC_HOOK = 'dynamics_module_manifest_sync';
 
     public static function boot(): void
     {
         register_activation_hook(__FILE__, [self::class, 'activate']);
+        register_deactivation_hook(__FILE__, [self::class, 'deactivate']);
+        add_filter('cron_schedules', [self::class, 'cron_schedules']);
+        add_action(self::SYNC_HOOK, [self::class, 'sync_modules']);
+        add_action('init', [self::class, 'ensure_sync_schedule'], 1);
         add_action('admin_menu', [self::class, 'admin_menu']);
         add_action('admin_init', [self::class, 'register_settings']);
         add_action('init', [self::class, 'register_composition_types']);
@@ -34,6 +41,7 @@ final class Dynamics_Headless_Connector
         add_action('save_post_dynamics_template', [self::class, 'composition_changed']);
         add_action('update_option_' . self::OPTION, [self::class, 'composition_settings_changed'], 10, 3);
         add_action('admin_post_dynamics_headless_test', [self::class, 'test_connection']);
+        add_action('admin_post_dynamics_modules_sync', [self::class, 'manual_module_sync']);
         add_action('transition_post_status', [self::class, 'content_changed'], 10, 3);
         add_action('post_updated', [self::class, 'published_content_updated'], 10, 3);
         add_action('created_term', [self::class, 'taxonomy_changed']);
@@ -50,6 +58,23 @@ final class Dynamics_Headless_Connector
         $settings['revalidation_secret'] = $settings['revalidation_secret'] ?: wp_generate_password(48, false, false);
         $settings['preview_secret'] = $settings['preview_secret'] ?: wp_generate_password(48, false, false);
         update_option(self::OPTION, $settings, false);
+        self::ensure_sync_schedule();
+    }
+
+    public static function deactivate(): void
+    {
+        wp_clear_scheduled_hook(self::SYNC_HOOK);
+    }
+
+    public static function cron_schedules(array $schedules): array
+    {
+        $schedules['dynamics_five_minutes'] = ['interval' => 300, 'display' => __('Every five minutes', 'dynamics-headless')];
+        return $schedules;
+    }
+
+    public static function ensure_sync_schedule(): void
+    {
+        if (!wp_next_scheduled(self::SYNC_HOOK)) wp_schedule_event(time() + 60, 'dynamics_five_minutes', self::SYNC_HOOK);
     }
 
     private static function settings(): array
@@ -129,17 +154,22 @@ final class Dynamics_Headless_Connector
         $yoast_ok = defined('WPSEO_VERSION');
         $notice = sanitize_key($_GET['dynamics_status'] ?? '');
         $fragments = get_posts(['post_type' => 'dynamics_fragment', 'post_status' => 'publish', 'numberposts' => -1, 'orderby' => 'title', 'order' => 'ASC']);
+        $sync = wp_parse_args(get_option(self::SYNC_OPTION, []), ['state' => 'never', 'hash' => '', 'lastSuccess' => 0, 'lastAttempt' => 0, 'error' => '']);
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('Dynamics Headless Frontend', 'dynamics-headless'); ?></h1>
             <p><?php esc_html_e('Publish in WordPress as usual. This connector handles previews and tells the Next.js site when content changes.', 'dynamics-headless'); ?></p>
             <?php if ($notice === 'success') : ?><div class="notice notice-success"><p><?php esc_html_e('Connection successful. WordPress, GraphQL, and Next.js agree.', 'dynamics-headless'); ?></p></div><?php endif; ?>
             <?php if ($notice === 'failed') : ?><div class="notice notice-error"><p><?php esc_html_e('Connection failed. Confirm the Vercel environment variables and deploy the latest frontend.', 'dynamics-headless'); ?></p></div><?php endif; ?>
+            <?php if ($notice === 'sync-success') : ?><div class="notice notice-success"><p><?php esc_html_e('Module definitions synchronized.', 'dynamics-headless'); ?></p></div><?php endif; ?>
+            <?php if ($notice === 'sync-failed') : ?><div class="notice notice-error"><p><?php esc_html_e('Module synchronization failed. The last working manifest is still active.', 'dynamics-headless'); ?></p></div><?php endif; ?>
             <table class="widefat striped" style="max-width:760px;margin:20px 0">
                 <tbody>
                     <tr><td><strong>WPGraphQL</strong></td><td><?php echo $graphql_ok ? '✅ Active' : '❌ Missing'; ?></td></tr>
                     <tr><td><strong>Yoast SEO</strong></td><td><?php echo $yoast_ok ? '✅ Active' : '❌ Missing'; ?></td></tr>
                     <tr><td><strong>GraphQL endpoint</strong></td><td><code><?php echo esc_html(home_url('/graphql')); ?></code></td></tr>
+                    <tr><td><strong>Module synchronization</strong></td><td><?php echo $sync['state'] === 'success' ? '✅' : ($sync['state'] === 'error' ? '⚠️' : '◌'); ?> <?php echo $sync['lastSuccess'] ? esc_html(sprintf('Last successful sync: %s', wp_date('Y-m-d H:i:s', (int) $sync['lastSuccess']))) : esc_html__('Using bundled manifest', 'dynamics-headless'); ?><?php if ($sync['error']) : ?><br><small><?php echo esc_html($sync['error']); ?></small><?php endif; ?></td></tr>
+                    <tr><td><strong>Manifest hash</strong></td><td><code><?php echo esc_html($sync['hash'] ? substr($sync['hash'], 0, 16) : 'bundled'); ?></code></td></tr>
                 </tbody>
             </table>
             <form method="post" action="options.php">
@@ -158,6 +188,11 @@ final class Dynamics_Headless_Connector
                 <input type="hidden" name="action" value="dynamics_headless_test">
                 <?php wp_nonce_field('dynamics_headless_test'); ?>
                 <?php submit_button(__('Test connection', 'dynamics-headless'), 'secondary', 'submit', false); ?>
+            </form>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline-block;margin-left:10px">
+                <input type="hidden" name="action" value="dynamics_modules_sync">
+                <?php wp_nonce_field('dynamics_modules_sync'); ?>
+                <?php submit_button(__('Sync modules now', 'dynamics-headless'), 'secondary', 'submit', false); ?>
             </form>
         </div>
         <?php
@@ -178,6 +213,43 @@ final class Dynamics_Headless_Connector
         $success = !is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200;
         wp_safe_redirect(add_query_arg('dynamics_status', $success ? 'success' : 'failed', admin_url('options-general.php?page=' . self::PAGE)));
         exit;
+    }
+
+    public static function manual_module_sync(): void
+    {
+        check_admin_referer('dynamics_modules_sync');
+        if (!current_user_can('manage_options')) wp_die(esc_html__('You are not allowed to do that.', 'dynamics-headless'));
+        $success = self::sync_modules();
+        wp_safe_redirect(add_query_arg('dynamics_status', $success ? 'sync-success' : 'sync-failed', admin_url('options-general.php?page=' . self::PAGE)));
+        exit;
+    }
+
+    public static function sync_modules(): bool
+    {
+        $settings = self::settings();
+        $status = wp_parse_args(get_option(self::SYNC_OPTION, []), ['state' => 'never', 'hash' => '', 'lastSuccess' => 0, 'lastAttempt' => 0, 'error' => '']);
+        $status['lastAttempt'] = time();
+        if (!$settings['frontend_url'] || !$settings['revalidation_secret']) return self::sync_failed($status, __('Frontend URL or secret is missing.', 'dynamics-headless'));
+        $response = wp_remote_get($settings['frontend_url'] . '/api/modules/manifest', [
+            'timeout' => 15,
+            'headers' => ['Accept' => 'application/json', 'X-WordPress-Secret' => $settings['revalidation_secret']],
+        ]);
+        if (is_wp_error($response)) return self::sync_failed($status, $response->get_error_message());
+        if (wp_remote_retrieve_response_code($response) !== 200) return self::sync_failed($status, sprintf(__('Frontend returned HTTP %d.', 'dynamics-headless'), wp_remote_retrieve_response_code($response)));
+        $payload = json_decode(wp_remote_retrieve_body($response), true);
+        if (!is_array($payload) || ($payload['schemaVersion'] ?? 0) !== 1 || !is_array($payload['modules'] ?? null) || !preg_match('/^[a-f0-9]{64}$/', (string) ($payload['hash'] ?? ''))) return self::sync_failed($status, __('Frontend returned an invalid module manifest.', 'dynamics-headless'));
+        foreach ($payload['modules'] as $definition) if (!is_array($definition) || !preg_match('/^[a-z][a-z0-9-]*$/', (string) ($definition['name'] ?? '')) || !is_array($definition['config'] ?? null) || !is_array($definition['resources'] ?? null)) return self::sync_failed($status, __('A module definition failed validation.', 'dynamics-headless'));
+        update_option(self::MANIFEST_OPTION, ['hash' => $payload['hash'], 'modules' => $payload['modules']], false);
+        update_option(self::SYNC_OPTION, ['state' => 'success', 'hash' => $payload['hash'], 'lastSuccess' => time(), 'lastAttempt' => time(), 'error' => ''], false);
+        return true;
+    }
+
+    private static function sync_failed(array $status, string $error): bool
+    {
+        $status['state'] = 'error';
+        $status['error'] = sanitize_text_field($error);
+        update_option(self::SYNC_OPTION, $status, false);
+        return false;
     }
 
     public static function content_changed(string $new_status, string $old_status, WP_Post $post): void
@@ -206,6 +278,7 @@ final class Dynamics_Headless_Connector
 
     public static function composition_settings_changed(): void
     {
+        wp_schedule_single_event(time() + 1, self::SYNC_HOOK);
         self::notify_frontend(null);
     }
 
@@ -332,6 +405,8 @@ final class Dynamics_Headless_Connector
 
     private static function module_definitions(): array
     {
+        $remote = get_option(self::MANIFEST_OPTION, []);
+        if (is_array($remote) && is_array($remote['modules'] ?? null) && $remote['modules']) return $remote['modules'];
         $path = plugin_dir_path(__FILE__) . 'modules-manifest.json';
         if (!is_readable($path)) {
             return [];
@@ -375,6 +450,8 @@ final class Dynamics_Headless_Connector
 
     public static function enqueue_module_editor(): void
     {
+        $sync = wp_parse_args(get_option(self::SYNC_OPTION, []), ['lastAttempt' => 0]);
+        if ((int) $sync['lastAttempt'] < time() - 300) self::sync_modules();
         wp_enqueue_script('dynamics-module-editor', plugins_url('module-editor.js', __FILE__), ['wp-blocks', 'wp-element', 'wp-components', 'wp-block-editor', 'wp-i18n'], '2.0.0', true);
         $fragments = array_map(static fn(WP_Post $post): array => ['label' => $post->post_title, 'value' => $post->ID], get_posts(['post_type' => 'dynamics_fragment', 'post_status' => 'publish', 'numberposts' => -1]));
         wp_localize_script('dynamics-module-editor', 'DynamicsModuleEditor', ['definitions' => self::module_definitions(), 'fragments' => $fragments, 'defaultLocale' => substr(get_locale(), 0, 2)]);
