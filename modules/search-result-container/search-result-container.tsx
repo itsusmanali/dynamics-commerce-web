@@ -7,6 +7,18 @@ import { SearchResultContainerView } from "./search-result-container.view";
 import definition from "./search-result-container.definition.json";
 import type { ModuleDataActionDefinition } from "../module.types";
 
-export default function SearchResultContainerModule(props: SearchResultContainerProps) {
-  return <SearchResultContainerView {...props} categoriesAction={definition.dataActions.categories as ModuleDataActionDefinition} productsAction={definition.dataActions.products as ModuleDataActionDefinition} />;
+export default function SearchResultContainerModule(
+  props: SearchResultContainerProps,
+) {
+  return (
+    <SearchResultContainerView
+      {...props}
+      categoriesAction={
+        definition.dataActions.categories as ModuleDataActionDefinition
+      }
+      productsAction={
+        definition.dataActions.products as ModuleDataActionDefinition
+      }
+    />
+  );
 }
