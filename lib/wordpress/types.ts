@@ -3,6 +3,14 @@ export interface SeoData {
   metaDesc?: string | null;
   canonical?: string | null;
   opengraphImage?: { sourceUrl?: string | null } | null;
+  opengraphTitle?: string | null;
+  opengraphDescription?: string | null;
+  opengraphType?: string | null;
+  metaRobotsNoindex?: string | null;
+  metaRobotsNofollow?: string | null;
+  twitterTitle?: string | null;
+  twitterDescription?: string | null;
+  twitterImage?: { sourceUrl?: string | null } | null;
 }
 
 export interface FeaturedImage {
@@ -33,12 +41,17 @@ export interface Post extends ContentNode {
 
 export interface Page extends ContentNode {
   uri: string;
+  parent?: { node?: { databaseId: number } | null } | null;
 }
 
 export interface Taxonomy {
   databaseId: number;
   name: string;
   slug: string;
+}
+
+export interface TaxonomyArchive extends Taxonomy {
+  count?: number | null;
 }
 
 export interface GraphQLResponse<T> {

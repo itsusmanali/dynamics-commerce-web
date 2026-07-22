@@ -4,7 +4,7 @@ import { getAllPosts, getPageByUri, getWordPressSettings } from "@/lib/wordpress
 
 export async function generateMetadata() {
   const [page, settings] = await Promise.all([getPageByUri("/"), getWordPressSettings()]);
-  return page ? metadataFor(page) : { title: settings?.title, description: settings?.description };
+  return page ? metadataFor(page, "/") : { title: settings?.title, description: settings?.description, alternates: { canonical: "/" } };
 }
 
 export default async function Home() {

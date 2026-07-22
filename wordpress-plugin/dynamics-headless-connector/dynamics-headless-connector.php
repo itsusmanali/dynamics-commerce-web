@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dynamics Headless Connector
  * Description: Connects WordPress to the Dynamics Commerce Next.js frontend with previews, cache revalidation, and connection checks.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Requires at least: 6.5
  * Requires PHP: 8.0
  * Author: Lumovy
@@ -31,8 +31,6 @@ final class Dynamics_Headless_Connector
         add_action('edited_term', [self::class, 'taxonomy_changed']);
         add_action('delete_term', [self::class, 'taxonomy_changed']);
         add_filter('preview_post_link', [self::class, 'preview_link'], 10, 2);
-        add_filter('page_link', [self::class, 'frontend_permalink'], 10, 2);
-        add_filter('post_link', [self::class, 'frontend_permalink'], 10, 2);
         add_filter('the_content', [self::class, 'rewrite_content_links'], 20);
         add_action('graphql_register_types', [self::class, 'register_graphql_fields']);
     }
@@ -199,21 +197,6 @@ final class Dynamics_Headless_Connector
             'type' => $post->post_type === 'post' ? 'post' : 'page',
             'id' => $post->ID,
         ], $settings['frontend_url'] . '/api/draft');
-    }
-
-    public static function frontend_permalink(string $url, $post): string
-    {
-        $post = $post instanceof WP_Post ? $post : get_post(absint($post));
-        if (is_admin() || !$post || $post->post_status !== 'publish') {
-            return $url;
-        }
-        $settings = self::settings();
-        if (!$settings['frontend_url']) {
-            return $url;
-        }
-        return $post->post_type === 'post'
-            ? $settings['frontend_url'] . '/blog/' . $post->post_name
-            : $settings['frontend_url'] . '/' . get_page_uri($post);
     }
 
     public static function rewrite_content_links(string $content): string

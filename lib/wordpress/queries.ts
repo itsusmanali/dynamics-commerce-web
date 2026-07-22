@@ -1,5 +1,5 @@
 import { queryWordPress, queryWordPressPreview } from "./client";
-import type { Page, Post } from "./types";
+import type { Page, Post, TaxonomyArchive } from "./types";
 
 export interface WordPressSettings {
   title: string;
@@ -7,7 +7,11 @@ export interface WordPressSettings {
   url: string;
 }
 
-const SEO_FIELDS = `seo { title metaDesc canonical opengraphImage { sourceUrl } }`;
+const SEO_FIELDS = `seo {
+  title metaDesc canonical metaRobotsNoindex metaRobotsNofollow
+  opengraphTitle opengraphDescription opengraphType opengraphImage { sourceUrl }
+  twitterTitle twitterDescription twitterImage { sourceUrl }
+}`;
 const IMAGE_FIELDS = `featuredImage { node { altText sourceUrl mediaDetails { width height } } }`;
 
 export async function getPageByUri(uri: string, preview = false) {
@@ -69,7 +73,7 @@ export async function getAllPosts() {
 export async function getAllPages() {
   const data = await queryWordPress<{ pages: { nodes: Page[] } }>(
     `query AllPages { pages(first: 100, where: { status: PUBLISH }) { nodes {
-      databaseId slug uri modified ${SEO_FIELDS}
+      databaseId slug uri title(format: RENDERED) modified parent { node { databaseId } } ${SEO_FIELDS}
     } } }`,
     {},
     ["pages"],
@@ -97,4 +101,40 @@ export async function getPostsByTaxonomy(type: "category" | "tag", slug: string)
     [`${type}:${slug}`, "posts"],
   );
   return data?.posts.nodes ?? [];
+}
+
+export async function getTaxonomies() {
+  const data = await queryWordPress<{
+    categories: { nodes: TaxonomyArchive[] };
+    tags: { nodes: TaxonomyArchive[] };
+  }>(
+    `query Taxonomies {
+      categories(first: 100, where: { hideEmpty: true }) { nodes { databaseId name slug count } }
+      tags(first: 100, where: { hideEmpty: true }) { nodes { databaseId name slug count } }
+    }`,
+    {},
+    ["taxonomies"],
+  );
+  return { categories: data?.categories.nodes ?? [], tags: data?.tags.nodes ?? [] };
+}
+
+export async function searchWordPress(search: string) {
+  const term = search.trim().slice(0, 100);
+  if (!term) return { pages: [] as Page[], posts: [] as Post[] };
+  const data = await queryWordPress<{
+    pages: { nodes: Page[] };
+    posts: { nodes: Post[] };
+  }>(
+    `query Search($search: String!) {
+      pages(first: 50, where: { search: $search, status: PUBLISH }) { nodes {
+        databaseId slug uri title(format: RENDERED) excerpt(format: RENDERED) ${SEO_FIELDS}
+      } }
+      posts(first: 50, where: { search: $search, status: PUBLISH }) { nodes {
+        databaseId slug title(format: RENDERED) excerpt(format: RENDERED) date ${IMAGE_FIELDS} ${SEO_FIELDS}
+      } }
+    }`,
+    { search: term },
+    [`search:${term.toLowerCase()}`],
+  );
+  return { pages: data?.pages.nodes ?? [], posts: data?.posts.nodes ?? [] };
 }
