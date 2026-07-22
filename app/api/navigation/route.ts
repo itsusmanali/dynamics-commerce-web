@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const mode = search.get("mode") === "retail" || search.get("mode") === "authored" ? search.get("mode") : "all";
   const menuSlug = search.get("menuSlug")?.replace(/[^a-z0-9_-]/gi, "").slice(0, 80) || "primary";
   const authored = await getWordPressMenu(menuSlug);
-  const commerce: MenuItem = { id: "commerce", label: "Commerce", href: "/commerce", audience: "retail", children: [] };
+  const commerce: MenuItem = { id: "commerce", label: "Shop", href: "/products", audience: "retail", children: [] };
   const items = mode === "retail" ? [commerce] : mode === "authored" ? authored : [commerce, ...authored];
   return NextResponse.json({ data: { items, source: "wordpress-graphql" } satisfies HeaderData });
 }

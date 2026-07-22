@@ -9,17 +9,17 @@ export function HeaderView({ config, resources, slots }: HeaderProps) {
   return (
     <div
       data-header-module
-      className={`${config.sticky ? "sticky top-0" : "relative"} z-50 border-b border-black/10 bg-white/95 text-zinc-950 shadow-sm backdrop-blur ${config.className}`}
+      className={`${config.sticky ? "sticky top-0" : "relative"} z-50 border-b border-black/[0.07] bg-white/90 text-zinc-950 backdrop-blur-2xl supports-[backdrop-filter]:bg-white/75 ${config.className}`}
       style={{
         backgroundColor: config.backgroundColor,
         color: config.foregroundColor,
       }}
     >
       <div
-        className={`site-shell flex min-h-20 items-center gap-8 ${config.variant === "centered" ? "flex-col justify-center py-4" : "justify-between"}`}
+        className={`site-shell flex min-h-[4.5rem] items-center gap-8 ${config.variant === "centered" ? "flex-col justify-center py-4" : "justify-between"}`}
       >
-        <Link href="/" className="shrink-0 text-xl font-bold tracking-tight">
-          {resources.siteName}
+        <Link href="/" className="group flex shrink-0 items-center gap-2.5 rounded-lg text-[17px] font-semibold tracking-[-0.025em] outline-none transition-opacity hover:opacity-65 focus-visible:ring-2 focus-visible:ring-black/20">
+          <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full bg-current shadow-[0_0_0_5px_rgb(0_0_0/0.05)] transition-transform duration-300 group-hover:scale-110" />{resources.siteName}
         </Link>
         <div className="min-w-0 flex-1">{slots.navigation}</div>
       </div>
