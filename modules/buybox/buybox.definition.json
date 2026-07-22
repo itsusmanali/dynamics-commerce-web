@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "friendlyName": "Buy box",
+  "name": "buybox",
+  "description": "Product detail summary with composable product feature slots.",
+  "categories": ["commerce", "product"],
+  "tags": ["buybox", "pdp", "product"],
+  "config": {
+    "currency": { "friendlyName": "Currency code", "type": "string", "default": "USD", "group": "Product" },
+    "showDescription": { "friendlyName": "Show description", "type": "boolean", "default": true, "group": "Product" },
+    "showProductNumber": { "friendlyName": "Show product number", "type": "boolean", "default": true, "group": "Product" },
+    "className": { "friendlyName": "CSS classes", "type": "string", "default": "", "group": "Advanced" }
+  },
+  "resources": {
+    "loadingLabel": { "value": "Loading product…", "comment": "Product request loading state." },
+    "errorLabel": { "value": "This product could not be loaded.", "comment": "Product request error state." },
+    "missingLabel": { "value": "Open a product URL to preview this module.", "comment": "Shown on the WordPress product template URL." },
+    "productNumberLabel": { "value": "Product number", "comment": "Product number label." }
+  },
+  "slots": {
+    "media-gallery": { "friendlyName": "Media gallery", "description": "Product images and media.", "allowedModules": ["media-gallery"] },
+    "store-selector": { "friendlyName": "Store selector", "description": "Store availability and pickup module.", "allowedModules": ["store-selector"] },
+    "text-blocks": { "friendlyName": "Text blocks", "description": "Reusable authored product messaging.", "allowedModules": ["text-block"] },
+    "social-share": { "friendlyName": "Social share", "description": "Product sharing tools.", "allowedModules": ["social-share"] },
+    "product-comparison": { "friendlyName": "Product comparison", "description": "Product comparison experience.", "allowedModules": ["product-comparison"] },
+    "product-specification": { "friendlyName": "Product specification", "description": "Detailed product specifications.", "allowedModules": ["product-specification"] }
+  },
+  "dataActions": {
+    "product": { "endpoint": "/api/commerce/product-by-ids", "method": "GET", "execution": "client" }
+  }
+}

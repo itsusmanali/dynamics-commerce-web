@@ -56,6 +56,8 @@ They are authoring templates. Storefront resolution uses clean URLs:
 
 A real WordPress page at a requested path always wins. Otherwise the catch-all route resolves Commerce data and renders the appropriate WordPress template. The rendered wrapper exposes `data-catalog-kind`, `data-category-id`, and `data-product-id` for modules that need route context.
 
+For the `product` template, add Buy box to Main and add Media gallery inside its Media gallery slot. The route supplies the resolved product record ID automatically; Buy box calls `product-by-ids` and Media gallery calls `media-locations`. The remaining Buy box slots are ready for store selector, text blocks, social share, comparison, and specification modules.
+
 ## WordPress synchronization
 
 After deploying Next.js, Lumovy Commerce Studio automatically downloads the generated module manifest every five minutes and when an editor opens with stale definitions. Settings > Commerce Studio also has a manual Sync Modules button.

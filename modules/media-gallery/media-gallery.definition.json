@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "friendlyName": "Media gallery",
+  "name": "media-gallery",
+  "description": "Interactive Commerce product image gallery.",
+  "categories": ["commerce", "product"],
+  "tags": ["gallery", "images", "pdp"],
+  "config": {
+    "imageFit": {
+      "friendlyName": "Image fit",
+      "type": "select",
+      "default": "contain",
+      "group": "Layout",
+      "options": [
+        { "label": "Contain", "value": "contain" },
+        { "label": "Cover", "value": "cover" }
+      ]
+    },
+    "showThumbnails": {
+      "friendlyName": "Show thumbnails",
+      "type": "boolean",
+      "default": true,
+      "group": "Layout"
+    },
+    "className": {
+      "friendlyName": "CSS classes",
+      "type": "string",
+      "default": "",
+      "group": "Advanced"
+    }
+  },
+  "resources": {
+    "loadingLabel": {
+      "value": "Loading product images…",
+      "comment": "Gallery loading state."
+    },
+    "emptyLabel": {
+      "value": "No product images are available.",
+      "comment": "Empty gallery state."
+    },
+    "errorLabel": {
+      "value": "Product images could not be loaded.",
+      "comment": "Gallery error state."
+    },
+    "missingLabel": {
+      "value": "Open a product URL to preview the gallery.",
+      "comment": "Shown on the WordPress product template URL."
+    }
+  },
+  "dataActions": {
+    "media": {
+      "endpoint": "/api/commerce/media-locations",
+      "method": "GET",
+      "execution": "client"
+    }
+  }
+}
